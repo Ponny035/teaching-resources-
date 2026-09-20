@@ -17,7 +17,7 @@
     <div class="eyebrow">Microeconomics · Session 2</div>
     <h1>Demand, Supply, Equilibrium &amp; Elasticity</h1>
     <p class="lede">Markets bring buyers and sellers together. Here you build the curves from individual willingness-to-pay, then drag them around to see shifts, shortages, surplus, and who wins and loses from a price control or a tax.</p>
-    <ul class="chips"><li>Demand &amp; supply</li><li>Shifts vs. movements</li><li>Equilibrium</li><li>Shortage &amp; surplus</li><li>Consumer &amp; producer surplus</li><li>Deadweight loss</li><li>Taxes &amp; subsidies</li><li>Elasticity</li></ul>
+    <ul class="chips"><li>Demand &amp; supply</li><li>Shifts vs. movements</li><li>Equilibrium</li><li>Shortage &amp; surplus</li><li>Consumer &amp; producer surplus</li><li>Deadweight loss</li><li>Taxes &amp; subsidies</li><li>Elasticity</li><li>Labour market &amp; technology</li></ul>
   </section>
 
   <!-- ============ 2A ============ -->
@@ -100,6 +100,7 @@
       <li>Give buyers <b>many substitutes</b> (flat demand). Buyers just switch away, so <i>sellers</i> bear most of the tax and quantity falls a lot. With <b>few substitutes</b>, buyers bear most of it and the quantity barely moves — which is why governments tax inelastic goods (fuel, tobacco).</li>
       <li>With <b>Price breakdown</b> on, compare the two dashed price lines. A tax makes the <b>consumer pay more</b> and the <b>producer receive less</b> than the original price; the gap between them is the tax. A subsidy does the opposite. The blue and orange bands show which side takes which part.</li>
       <li>Set buyers’ and sellers’ substitutes equal: the burden splits 50/50 no matter who the law says pays.</li>
+      <li>Start with <b>“Tax (net effect only)”</b>: no curve shifts, you just see the wedge between what buyers pay and what sellers receive. Then choose <b>“Tax to consumers (C)”</b> (demand shifts down) or <b>“Tax to producers (P)”</b> (supply shifts up). The “market price” E* changes, but the quantity, what buyers pay, what sellers receive and the deadweight loss stay <b>exactly the same</b>. The same three choices exist for a subsidy.</li>
       <li>Drag the slider below zero for a <b>subsidy</b>. Consumers and producers gain, but taxpayers pay more — the gap is deadweight loss from over-producing.</li>
     </ul></details>
   </section>
@@ -128,6 +129,32 @@
     </ul></details>
   </section>
 
+  <!-- ============ 2E ============ -->
+  <section class="lab" id="lab-lm">
+    <div class="lab-head">
+      <h2>2E · The labour market: wage vs. hours, and how technology shifts supply (and demand)</h2>
+      <p>Here the “good” is <b>labour</b> and its “price” is the <b>wage</b>. Workers <b>supply</b> hours (more hours are offered at a higher wage: the trade-off you met in Session 1C) and firms <b>demand</b> hours (each hour is worth its marginal product). <b>Technology can shift either curve.</b> <b>Time-saving technology</b> at home (appliances, delivery, remote work) frees hours and shifts <b>supply</b> to the right. <b>Productivity technology</b> makes each hour more valuable and shifts <b>demand</b> to the right, while <b>automation</b> that replaces workers shifts demand left. Use the sliders, or drag the curves.</p>
+    </div>
+    <div class="lab-body">
+      <div class="viz">
+        <div id="legend-lm"></div>
+        <div id="chart-lm"></div>
+      </div>
+      <div class="panel">
+        <div id="ctl-lm" class="panel"></div>
+        <div id="msg-lm" class="msg"></div>
+        <div id="stats-lm"></div>
+        <div id="btn-lm" class="btns"></div>
+      </div>
+    </div>
+    <details class="try"><summary>Things to try</summary><ul>
+      <li>Push <b>time-saving technology</b> up. Supply shifts right: the wage <b>falls</b> but employment <b>rises</b>, and workers’ surplus changes as the wage drops.</li>
+      <li>Push <b>productivity technology</b> up instead. Demand shifts right: the wage <b>and</b> employment both rise.</li>
+      <li>Set productivity technology below zero (automation): the wage and employment both fall.</li>
+      <li>Move both sliders together. Employment rises, but the wage can go either way — it depends on which shift is bigger.</li>
+    </ul></details>
+  </section>
+
   <section class="lab">
     <div class="lab-head"><h2>Cheat sheet: what shifts the curves?</h2></div>
     <div class="two-col">
@@ -138,7 +165,7 @@
       </div>
       <div>
         <h3 style="color:var(--supply)">Supply shifters</h3>
-        <ul><li>Input costs (wages, materials)</li><li>Technology</li><li>Taxes &amp; subsidies</li><li>Expectations</li><li>Number of sellers</li></ul>
+        <ul><li>Input costs (wages, materials)</li><li>Technology (cheaper production shifts supply right)</li><li>Taxes &amp; subsidies</li><li>Expectations</li><li>Number of sellers</li></ul>
         <p class="hint">What makes demand more elastic? More substitutes, luxuries, bigger share of budget, longer time horizon.</p>
       </div>
     </div>
@@ -151,6 +178,7 @@
       <li>Above equilibrium price → <b>surplus</b>; below → <b>shortage</b>. Prices move to clear them.</li>
       <li><b>CS</b> is the area between the demand curve and price; <b>PS</b> the area between price and the supply curve. Equilibrium <b>maximises total surplus</b>.</li>
       <li>Anything that stops trades that benefit both sides (ceiling, floor, tax) creates <b>deadweight loss</b>. A tax moves part of the surplus to the <b>government</b>; a subsidy “adds” surplus for buyers and sellers but costs taxpayers more than it adds.</li>
+      <li>In the <b>labour market</b>, the wage is the price of labour. Technology that saves workers’ time shifts <b>supply</b> right (wage ↓, hours ↑); productivity technology shifts <b>demand</b> right (wage ↑, hours ↑).</li>
       <li>The more elastic side of the market bears <i>less</i> of a tax; elasticity also tells you if a price cut raises revenue.</li>
     </ul>
   </section>

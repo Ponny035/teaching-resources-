@@ -4,6 +4,18 @@
   var clamp = TR.clamp, money = TR.money;
   var f1 = function (v) { return v.toFixed(1); };
   var f2 = function (v) { return v.toFixed(2); };
+  /* Explains which curve shifts, and that the legal payer does not change the economic outcome. */
+  function payerNote(isTax, side, r) {
+    var d = function (x) { return '$' + f1(x); }, txt;
+    if (side === 'N') return ' <i>No curve is shifted because nothing says who legally pays the ' + (isTax ? 'tax' : 'subsidy') + '. Choose “to consumers” or “to producers” to see which curve moves — the result is the same either way.</i>';
+    if (isTax) txt = side === 'S'
+      ? 'The tax is legally on <b>sellers</b>, so the <b>supply</b> curve shifts up: buyers pay the market price ' + d(r.Pc) + ' and sellers keep ' + d(r.Ps) + '.'
+      : 'The tax is legally on <b>buyers</b>, so the <b>demand</b> curve shifts down: sellers receive the market price ' + d(r.Ps) + ' and buyers pay that plus the tax, ' + d(r.Pc) + '.';
+    else txt = side === 'S'
+      ? 'The subsidy goes to <b>sellers</b>, so <b>supply</b> shifts down: buyers pay the market price ' + d(r.Pc) + ' and sellers receive ' + d(r.Ps) + '.'
+      : 'The subsidy goes to <b>buyers</b>, so <b>demand</b> shifts up: sellers receive the market price ' + d(r.Ps) + ' and buyers effectively pay ' + d(r.Pc) + '.';
+    return ' ' + txt + ' <i>Who is legally taxed makes no difference to the outcome</i>: the same quantity, prices and burden appear either way.';
+  }
 
   /* =====================================================================
      2A — discrete willingness-to-pay staircase
@@ -95,11 +107,11 @@
      ===================================================================== */
   var base = { a: 90, b: 1, c: 10, d: 1 };
   var M = Object.assign({}, base);
-  var mode = 'none', pv = { ceiling: 35, floor: 65, tax: 20, subsidy: 15 };
+  var mode = 'none', pv = { ceiling: 35, floor: 65, tax: 20, subsidy: 15 }, payerB = 'N';   // payerB: 'N' net effect only, 'S' sellers (shifts supply), 'D' buyers (shifts demand)
   var snap = null;
 
   var cB = TR.chart('#chart-b', { xmax: 120, ymax: 120, xstep: 20, ystep: 20, xlabel: 'Quantity', ylabel: 'Price ($)', yfmt: function (v) { return '$' + v; }, aspect: 0.82, maxH: 520 });
-  TR.legend('#legend-b', [['demand', 'Demand'], ['supply', 'Supply'], ['ghost', 'Starting curves'], ['box demand', 'Consumer surplus'], ['box supply', 'Producer surplus'], ['box gold', 'Tax revenue / subsidy cost'], ['box red', 'Deadweight loss']]);
+  TR.legend('#legend-b', [['demand', 'Demand'], ['supply', 'Supply'], ['ghost', 'Starting curves'], ['supply dash', 'Supply after tax / subsidy (on sellers)'], ['demand dash', 'Demand after tax / subsidy (on buyers)'], ['box demand', 'Consumer surplus'], ['box supply', 'Producer surplus'], ['box gold', 'Tax revenue / subsidy cost'], ['box red', 'Deadweight loss']]);
 
   function eqOf(m) {
     var Q = Math.max(0, (m.a - m.c) / (m.b + m.d));
@@ -160,6 +172,11 @@
     }
     c.line(0, a, XM, D(XM), 'demand', { drag: 'D' });
     c.line(0, cc, XM, S(XM), 'supply', { drag: 'S' });
+    if ((mode === 'tax' || mode === 'subsidy') && pv[mode] > 0.05) {          // the curve of the taxed / subsidised side shifts
+      var sgB = mode === 'tax' ? 1 : -1, vB = pv[mode];
+      if (payerB === 'S') c.line(0, cc + sgB * vB, XM, cc + sgB * vB + d * XM, 'supply dash thin');
+      else if (payerB === 'D') c.line(0, a - sgB * vB, XM, a - sgB * vB - b * XM, 'demand dash thin');
+    }
 
     /* curve labels */
     var dx = Math.min(112, (a - 22) / b), sx = Math.min(112, (108 - cc) / d);
@@ -186,8 +203,10 @@
         c.line(r.Q, D(r.Q), r.Q, 0, 'drop'); c.text(r.Q, 0, 'Q=' + f1(r.Q), 'soft', { dy: -7 });
         if (mode === 'tax' || mode === 'subsidy') {          // new equilibrium: demand meets supply-after-policy
           c.text(r.Qe, r.Pe, 'Original E* ' + money(r.Pe, 1), 'soft', { dx: mode === 'tax' ? 10 : -10, dy: mode === 'tax' ? -12 : 20, anchor: mode === 'tax' ? 'start' : 'end' });
-          c.dot(r.Q, r.Pc, 'ink', 6.5);
-          c.text(r.Q, r.Pc, 'New E* ' + money(r.Pc, 1), '', { anchor: 'start', dx: 10, dy: mode === 'tax' ? -10 : 18 });
+          if (payerB !== 'N') {
+            c.dot(r.Q, payerB === 'S' ? r.Pc : r.Ps, 'ink', 6.5);
+            c.text(r.Q, payerB === 'S' ? r.Pc : r.Ps, 'New E* ' + money(payerB === 'S' ? r.Pc : r.Ps, 1), '', { anchor: 'start', dx: 10, dy: mode === 'tax' ? -10 : 18 });
+          }
         }
       }
     }
@@ -216,6 +235,7 @@
     else if (mode === 'floor') extra = pv.floor <= r.Pe ? ' The floor is below equilibrium, so it isn’t binding.' : ' The floor is binding: buyers cut back, sellers can’t sell all they’d like → surplus.';
     else if (mode === 'subsidy') extra = ' The subsidy of $' + pv.subsidy + ' per unit pushes quantity above the equilibrium. Buyers’ price falls by $' + f1(r.Pe - r.Pc) + ' and sellers gain $' + f1(r.Ps - r.Pe) + '. Taxpayers pay $' + f1(-r.G) + ' — more than the gain to buyers and sellers, so the surplus is “added” but not for free: the excess is deadweight loss.';
     else if (mode === 'tax') extra = ' The tax drives a wedge of $' + pv.tax + ' between what buyers pay and sellers keep. Buyers bear $' + f1(r.Pc - r.Pe) + ' and sellers $' + f1(r.Pe - r.Ps) + ' of it.';
+    if ((mode === 'tax' || mode === 'subsidy') && a > cc) extra += payerNote(mode === 'tax', payerB, r);
     TR.message('#msg-b', describe() + extra, r.DWL > 0.5 ? 'bad' : '');
     renderSplit(r);
   };
@@ -260,13 +280,13 @@
   var sB = TR.slider(ctlB, { label: 'Demand steepness', min: 0.4, max: 2.5, step: 0.1, value: M.b, fmt: f1, hint: 'Steeper = buyers care less about price (less elastic).', onInput: function (v) { M.b = v; cB.draw(); } });
   var sD = TR.slider(ctlB, { label: 'Supply steepness', min: 0.4, max: 2.5, step: 0.1, value: M.d, fmt: f1, hint: 'Steeper = sellers can’t easily change output.', onInput: function (v) { M.d = v; cB.draw(); } });
   ctlB.insertAdjacentHTML('beforeend', '<p class="ctl-title">Government policy</p>');
-  var sVal;   // assigned below; the seg callback only runs on click
+  var sVal, payB;   // assigned below; the seg callback only runs on click
   TR.seg(ctlB, [['none', 'None'], ['ceiling', 'Price ceiling'], ['floor', 'Price floor'], ['tax', 'Per-unit tax'], ['subsidy', 'Per-unit subsidy']], 'none', function (m) {
     mode = m;
     var Pe = eqOf(M).P;
     if (m === 'ceiling') pv.ceiling = Math.round(Pe * 0.7);
     if (m === 'floor') pv.floor = Math.round(Pe * 1.3);
-    sVal.hide(m === 'none');
+    sVal.hide(m === 'none'); payB.hide(m !== 'tax' && m !== 'subsidy'); if (m === 'tax' || m === 'subsidy') payB.setKind(m === 'tax');
     if (m !== 'none') {
       sVal.setLabel({ ceiling: 'Price ceiling', floor: 'Price floor', tax: 'Tax per unit', subsidy: 'Subsidy per unit' }[m]);
       sVal.setRange(0, (m === 'tax' || m === 'subsidy') ? 80 : 120);
@@ -276,6 +296,8 @@
   });
   sVal = TR.slider(ctlB, { label: 'Price ceiling', min: 0, max: 120, step: 1, value: pv.ceiling, fmt: money, onInput: function (v) { pv[mode] = v; cB.draw(); } });
   sVal.hide(true);
+  payB = TR.payer(ctlB, payerB, function (v) { payerB = v; cB.draw(); });
+  payB.hide(true);
 
   TR.button('#btn-b', 'Make this the new baseline', function () { base = Object.assign({}, M); cB.draw(); }, 'primary');
   TR.button('#btn-b', 'Reset curves', function () {
@@ -291,14 +313,16 @@
      ===================================================================== */
   var T = { a: 90, kb: 2.5, c: 10, kd: 2.5, t: 20 }, snapT = null;
   var PB = true;          // price breakdown: show what buyers pay vs what sellers receive
+  var payerT = 'N';       // 'N' net effect only, 'S' sellers (shifts supply), 'D' buyers (shifts demand)
   var cT = TR.chart('#chart-t', { xmax: 120, ymax: 120, xstep: 20, ystep: 20, xlabel: 'Quantity', ylabel: 'Price ($)', yfmt: function (v) { return '$' + v; }, aspect: 0.82, maxH: 520 });
-  TR.legend('#legend-t', [['demand', 'Demand'], ['supply', 'Supply'], ['supply dash', 'Supply after tax / subsidy'], ['box demand', 'Consumer surplus'], ['box supply', 'Producer surplus'], ['box gold', 'Tax revenue / subsidy cost'], ['box red', 'Deadweight loss']]);
+  TR.legend('#legend-t', [['demand', 'Demand'], ['supply', 'Supply'], ['supply dash', 'Supply after tax / subsidy (on sellers)'], ['demand dash', 'Demand after tax / subsidy (on buyers)'], ['box demand', 'Consumer surplus'], ['box supply', 'Producer surplus'], ['box gold', 'Tax revenue / subsidy cost'], ['box red', 'Deadweight loss']]);
   function tCurves() { return { a: T.a, b: 2.5 / T.kb, c: T.c, d: 2.5 / T.kd }; }
 
   cT.render = function (c) {
     var m = tCurves(), a = m.a, b = m.b, cc = m.c, d = m.d, t = T.t, XM = 120;
     var D = function (q) { return a - b * q; }, S = function (q) { return cc + d * q; };
     var isTax = t >= 0, v = Math.abs(t), r = solve(m, v < 0.05 ? 'none' : (isTax ? 'tax' : 'subsidy'), v);
+    if (typeof payT !== 'undefined' && payT) payT.setKind(isTax);
 
     if (a > cc) {
       c.poly([[0, a], [r.Q, D(r.Q)], [r.Q, r.Pc], [0, r.Pc]], 'demand');
@@ -314,7 +338,10 @@
     }
     c.line(0, a, XM, D(XM), 'demand', { drag: 'D' });
     c.line(0, cc, XM, S(XM), 'supply', { drag: 'S' });
-    if (v >= 0.05) c.line(0, cc + t, XM, cc + t + d * XM, 'supply dash thin');   // tax adds to cost, subsidy lowers it
+    if (v >= 0.05) {          // the taxed / subsidised side's curve shifts (tax: S up or D down; subsidy: S down or D up)
+      if (payerT === 'S') c.line(0, cc + t, XM, cc + t + d * XM, 'supply dash thin');
+      else if (payerT === 'D') c.line(0, a - t, XM, a - t - b * XM, 'demand dash thin');
+    }
 
     var dx = Math.min(112, (a - 22) / b), sx = Math.min(112, (108 - cc) / d);
     c.text(Math.max(dx, 4), D(Math.max(dx, 4)), 'Demand', 'big', { dy: 18, dx: 4, anchor: 'start' });
@@ -340,8 +367,11 @@
       if (v >= 0.05) {
         c.dot(r.Q, D(r.Q), 'demand', 5); c.dot(r.Q, S(r.Q), 'supply', 5);
         c.line(r.Q, D(r.Q), r.Q, 0, 'drop'); c.text(r.Q, 0, 'Q=' + f1(r.Q), 'soft', { dy: -7 });
-        c.dot(r.Q, r.Pc, 'ink', 6.5);                      // new equilibrium E*: demand meets supply-after-tax/subsidy
-        c.text(r.Q, r.Pc, 'New E* ' + money(r.Pc, 1), '', { anchor: 'start', dx: 12, dy: isTax ? -22 : 20 });
+        if (payerT !== 'N') {                              // new equilibrium E*: the shifted curve meets the other curve
+          var qy = payerT === 'S' ? r.Pc : r.Ps;
+          c.dot(r.Q, qy, 'ink', 6.5);
+          c.text(r.Q, qy, 'New E* ' + money(qy, 1), '', { anchor: 'start', dx: 12, dy: (isTax === (payerT === 'S')) ? -22 : 20 });
+        }
       }
     }
     var qh = clamp(0.25 * a / b, 6, 100); c.handle('D', qh, D(qh));
@@ -350,7 +380,7 @@
     var buyer = isTax ? r.Pc - r.Pe : r.Pe - r.Pc, seller = isTax ? r.Pe - r.Ps : r.Ps - r.Pe;
     var bShare = v > 0.05 ? Math.round(100 * buyer / v) : 0;
     var rows = [['Original E*', 'P ' + money(r.Pe, 1) + ' · Q ' + f1(r.Qe)]];
-    if (v >= 0.05) rows.push(['New E* (market price)', 'P ' + money(r.Pc, 1) + ' · Q ' + f1(r.Q), 'key']);
+    if (v >= 0.05) rows.push(payerT === 'N' ? ['New quantity', f1(r.Q) + ' (was ' + f1(r.Qe) + ')', 'key'] : ['New E* (market price)', 'P ' + money(payerT === 'S' ? r.Pc : r.Ps, 1) + ' · Q ' + f1(r.Q), 'key']);
     rows.push(['Buyers pay', money(r.Pc, 1)], ['Sellers receive', money(r.Ps, 1)]);
     if (v >= 0.05) rows.push([isTax ? 'Buyers bear' : 'Buyers gain', bShare + '% ($' + f1(buyer) + ')'], [isTax ? 'Sellers bear' : 'Sellers gain', (100 - bShare) + '% ($' + f1(seller) + ')'],
       [isTax ? 'Tax revenue' : 'Subsidy cost', money(Math.abs(r.G))]);
@@ -361,13 +391,17 @@
     if (a <= cc) msg = '<b>Demand is below supply everywhere — no trade.</b>';
     else if (v < 0.05) msg = 'No tax or subsidy: equilibrium at Q = ' + f1(r.Qe) + ', P = $' + f1(r.Pe) + '. Slide the tax to the right (or a subsidy to the left).';
     else {
+      var lead = payerT === 'N'
+        ? 'Net effect: buyers pay <b>' + money(r.Pc, 1) + '</b> and sellers receive <b>' + money(r.Ps, 1) + '</b> (original price ' + money(r.Pe, 1) + ') at quantity ' + f1(r.Q) + '. '
+        : 'The <b>new equilibrium (market) price</b> is ' + money(payerT === 'S' ? r.Pc : r.Ps, 1) + ' (E* was ' + money(r.Pe, 1) + ') at quantity ' + f1(r.Q) + '. ';
       var who = Math.abs(b - d) < 0.01 ? 'The burden is split <b>equally</b>' : 'The burden falls mostly on <b>' + (b > d ? 'buyers</b> (steeper demand, fewer substitutes)' : 'sellers</b> (steeper supply, fewer alternatives)');
       if (isTax) {
-        msg = 'The <b>new equilibrium (market) price</b> is ' + money(r.Pc, 1) + ' (E* was ' + money(r.Pe, 1) + ') at quantity ' + f1(r.Q) + '. The tax of $' + f1(v) + ' per unit cuts quantity by ' + f1(r.Qe - r.Q) + '. Buyers <b>substitute</b> away from the pricier good. ' + who + ': buyers bear ' + bShare + '%, sellers ' + (100 - bShare) + '%. ' +
+        msg = lead + 'The tax of $' + f1(v) + ' per unit cuts quantity by ' + f1(r.Qe - r.Q) + '. Buyers <b>substitute</b> away from the pricier good. ' + who + ': buyers bear ' + bShare + '%, sellers ' + (100 - bShare) + '%. ' +
           'Government collects <b>' + money(r.G) + '</b>; the trades that vanish are the <b>deadweight loss</b> (' + money(r.DWL) + ').';
       } else {
-        msg = 'The <b>new equilibrium (market) price</b> is ' + money(r.Pc, 1) + ' (E* was ' + money(r.Pe, 1) + ') at quantity ' + f1(r.Q) + '. The subsidy of $' + f1(v) + ' per unit raises quantity by ' + f1(r.Q - r.Qe) + '. Buyers get ' + bShare + '% of the benefit and sellers ' + (100 - bShare) + '% (the side with the <b>steeper</b> curve gains more). Taxpayers pay <b>' + money(-r.G) + '</b>, more than the gain to buyers and sellers: the extra units cost more to produce than buyers value them — <b>deadweight loss</b> ' + money(r.DWL) + '.';
+        msg = lead + 'The subsidy of $' + f1(v) + ' per unit raises quantity by ' + f1(r.Q - r.Qe) + '. Buyers get ' + bShare + '% of the benefit and sellers ' + (100 - bShare) + '% (the side with the <b>steeper</b> curve gains more). Taxpayers pay <b>' + money(-r.G) + '</b>, more than the gain to buyers and sellers: the extra units cost more to produce than buyers value them — <b>deadweight loss</b> ' + money(r.DWL) + '.';
       }
+      msg += payerNote(isTax, payerT, r);
       kind = r.DWL > 0.5 ? 'warn' : '';
     }
     TR.message('#msg-t', msg, kind);
@@ -389,7 +423,7 @@
       '<div class="pbar-row"><span>Producer receives</span><div class="pbar-wrap"><div class="pbar">' + prodBar + '</div>' + mark + '</div><b>' + money(r.Ps, 1) + '</b></div>' +
       '<ul class="split-list" style="grid-template-columns:1fr">' +
       '<li><i class="sw box ink"></i>Original equilibrium price E* <b>' + money(r.Pe, 1) + '</b></li>' +
-      '<li><i class="sw box ink"></i>New equilibrium (market) price <b>' + money(r.Pc, 1) + '</b></li>' +
+      (payerT === 'N' ? '' : '<li><i class="sw box ink"></i>New equilibrium (market) price <b>' + money(payerT === 'S' ? r.Pc : r.Ps, 1) + '</b></li>') +
       '<li><i class="sw box demand"></i>Buyers: <b>' + dl(r.Pc) + '</b></li>' +
       '<li><i class="sw box supply"></i>Sellers: <b>' + dl(r.Ps) + '</b></li>' +
       '<li><i class="sw box gold"></i>' + (isTax ? 'Tax wedge (consumer price − producer price)' : 'Subsidy (producer price − consumer price)') + ' <b>' + money(v, 1) + '</b></li></ul>' +
@@ -411,6 +445,7 @@
   var subFmt = function (v) { return v <= 1.5 ? 'few' : v >= 4 ? 'many' : 'some'; };
   var sKb = TR.slider(ctlT, { label: 'Buyers’ substitutes', min: 1, max: 5, step: 0.5, value: T.kb, fmt: subFmt, hint: 'Many substitutes → flat demand: buyers switch away easily (elastic).', onInput: function (v) { T.kb = v; cT.draw(); } });
   var sKd = TR.slider(ctlT, { label: 'Sellers’ alternatives', min: 1, max: 5, step: 0.5, value: T.kd, fmt: subFmt, hint: 'Many alternatives (other products to make) → flat supply (elastic).', onInput: function (v) { T.kd = v; cT.draw(); } });
+  var payT = TR.payer(ctlT, payerT, function (v) { payerT = v; cT.draw(); });
   ctlT.insertAdjacentHTML('beforeend', '<p class="ctl-title">Chart option</p>');
   var segPB = TR.seg(ctlT, [['on', 'Show buyer & seller price'], ['off', 'Hide']], 'on', function (v) { PB = v === 'on'; cT.draw(); });
   TR.button('#btn-t', 'Reset', function () { T = { a: 90, kb: 2.5, c: 10, kd: 2.5, t: 20 }; sTax.set(20); sKb.set(2.5); sKd.set(2.5); cT.draw(); });
@@ -464,4 +499,75 @@
   TR.slider('#ctl-c', { label: 'Demand steepness (pivots around Q=50, P=$50)', min: 0.5, max: 2, step: 0.1, value: E.b, fmt: f1, hint: 'Lower = flatter = more elastic at the pivot.',
     onInput: function (v) { E.b = v; E.Q = clamp(E.Q, 2, ePar().qint - 2); c1.draw(); c2.draw(); } });
   c1.draw(); c2.draw();
+
+  /* =====================================================================
+     2E — the labour market: wage vs hours, and how technology shifts S and D
+     Labour demand: w = a − b·L   (firms' marginal revenue product)      Labour supply: w = c + d·L
+     Technology: time-saving tech shifts S right by tS;  productivity tech shifts D right by tD (negative = automation).
+     ===================================================================== */
+  var LMB = { a: 90, b: 1, c: 10, d: 1 }, LMT = { tS: 0, tD: 0 }, snapLM = null;
+  var cLM = TR.chart('#chart-lm', { xmax: 120, ymax: 120, xstep: 20, ystep: 20, xlabel: 'Labour hired (thousand hours)', ylabel: 'Wage ($ per hour)', yfmt: function (v) { return '$' + v; }, aspect: 0.82, maxH: 520 });
+  TR.legend('#legend-lm', [['demand', 'Labour demand (D)'], ['supply', 'Labour supply (S)'], ['ghost', 'Before technology'], ['box demand', 'Employers’ surplus'], ['box supply', 'Workers’ surplus']]);
+  function lmEff() { return { a: LMB.a + LMB.b * LMT.tD, b: LMB.b, c: LMB.c - LMB.d * LMT.tS, d: LMB.d }; }
+  function lmEq(m) { var L = Math.max(0, (m.a - m.c) / (m.b + m.d)); return { L: L, w: m.a - m.b * L }; }
+
+  cLM.render = function (c) {
+    var m = lmEff(), e = lmEq(m), e0 = lmEq(LMB), XM = 120, changed = LMT.tS !== 0 || LMT.tD !== 0;
+    var D = function (l) { return m.a - m.b * l; }, S = function (l) { return m.c + m.d * l; };
+    if (m.a > m.c) {
+      c.poly([[0, e.w], [e.L, e.w], [e.L, S(e.L)], [0, m.c]], 'supply');
+      c.poly([[0, m.a], [e.L, D(e.L)], [e.L, e.w], [0, e.w]], 'demand');
+    }
+    if (changed) { c.line(0, LMB.a, XM, LMB.a - LMB.b * XM, 'ghost'); c.line(0, LMB.c, XM, LMB.c + LMB.d * XM, 'ghost'); }
+    c.line(0, m.a, XM, D(XM), 'demand', { drag: 'D' });
+    c.line(0, m.c, XM, S(XM), 'supply', { drag: 'S' });
+    var dx = Math.min(112, (m.a - 22) / m.b), sx = Math.min(112, (108 - m.c) / m.d);
+    c.text(Math.max(dx, 4), D(Math.max(dx, 4)), 'Labour demand', 'big', { dy: 18, dx: 4, anchor: 'start' });
+    c.text(Math.max(sx, 4), S(Math.max(sx, 4)), 'Labour supply', 'big', { dy: -10, dx: -4, anchor: 'end' });
+    if (m.a > m.c) {
+      if (e.L > 8) { c.text(e.L * 0.3, (e.w + D(e.L * 0.3)) / 2, 'Employers', 'big'); c.text(e.L * 0.3, Math.max(m.c, (e.w + S(e.L * 0.3)) / 2), 'Workers', 'big'); }
+      if (changed) { c.dot(e0.L, e0.w, 'hollow', 6); c.text(e0.L, e0.w, 'Before', 'soft', { dx: -10, dy: 18, anchor: 'end' }); }
+      c.dot(e.L, e.w, 'ink', 6.5); c.drop(e.L, e.w, 'L=' + f1(e.L), 'w=$' + f1(e.w));
+    }
+    var qh = clamp(0.25 * m.a / m.b, 6, 100); c.handle('D', qh, D(qh));
+    var qs = clamp(0.55 * (120 - m.c) / m.d, 10, 100); c.handle('S', qs, S(qs));
+
+    var dW = e.w - e0.w, dL = e.L - e0.L, sg = function (v) { return (v >= 0 ? '+' : '−') + '$' + Math.abs(v).toFixed(1); };
+    var WS = e.w * e.L - m.c * e.L - m.d * e.L * e.L / 2, ES = m.a * e.L - m.b * e.L * e.L / 2 - e.w * e.L;
+    TR.stats('#stats-lm', [
+      ['Wage', money(e.w, 1), 'key'], ['Employment', f1(e.L) + ' k hours', 'key'],
+      ['Wage change', changed ? sg(dW) : '—', dW < -0.05 ? 'bad' : dW > 0.05 ? 'good' : ''],
+      ['Employment change', changed ? (dL >= 0 ? '+' : '−') + f1(Math.abs(dL)) : '—', dL < -0.05 ? 'bad' : dL > 0.05 ? 'good' : ''],
+      ['Workers’ surplus', money(WS)], ['Employers’ surplus', money(ES)]
+    ]);
+
+    var parts = [];
+    if (LMT.tS !== 0) parts.push('<b>Time-saving technology</b> (' + (LMT.tS > 0 ? 'appliances, delivery, remote work' : 'less usable time') + ') ' + (LMT.tS > 0 ? 'lets people offer more hours at every wage, so <b>supply shifts right</b>' : 'shifts supply left') + '.');
+    if (LMT.tD !== 0) parts.push('<b>' + (LMT.tD > 0 ? 'Productivity technology' : 'Automation that replaces labour') + '</b> ' + (LMT.tD > 0 ? 'makes each hour worth more to firms, so <b>demand shifts right</b>' : 'makes each hour worth less to firms, so <b>demand shifts left</b>') + '.');
+    var msg;
+    if (m.a <= m.c) msg = '<b>Labour demand is below supply everywhere — no jobs at any wage.</b>';
+    else if (!changed) msg = 'Drag a curve, or use the technology sliders, to see how the wage and employment change. Equilibrium: wage $' + f1(e.w) + ', ' + f1(e.L) + ' thousand hours.';
+    else {
+      var why = '';
+      if (LMT.tS !== 0 && LMT.tD === 0) why = ' A supply shift moves the market <i>along</i> the demand curve: the wage and employment move in <b>opposite</b> directions.';
+      else if (LMT.tD !== 0 && LMT.tS === 0) why = ' A demand shift moves the market <i>along</i> the supply curve: the wage and employment move in the <b>same</b> direction.';
+      else why = ' Both curves moved, so employment’s direction is clear but the wage depends on which shift is bigger.';
+      msg = parts.join(' ') + ' New equilibrium: wage ' + money(e.w, 1) + ' (' + sg(dW) + '), employment ' + f1(e.L) + ' thousand hours (' + (dL >= 0 ? '+' : '−') + f1(Math.abs(dL)) + ').' + why;
+    }
+    TR.message('#msg-lm', msg, dW < -0.05 && dL < -0.05 ? 'bad' : '');
+  };
+  cLM.onDragStart = function () { snapLM = { a: LMB.a, c: LMB.c }; };
+  cLM.onDrag = function (id, x, y, sp) {
+    var dx = x - sp.x, dy = y - sp.y;
+    if (id === 'D') LMB.a = clamp(snapLM.a + dy + LMB.b * dx, 30, 120);
+    else if (id === 'S') LMB.c = clamp(snapLM.c + dy - LMB.d * dx, 0, 100);
+    cLM.draw();
+  };
+  var ctlLM = document.querySelector('#ctl-lm');
+  var sTS = TR.slider(ctlLM, { label: 'Time-saving technology (shifts supply)', min: -20, max: 40, step: 1, value: 0, fmt: function (v) { return v === 0 ? 'none' : (v > 0 ? '+' : '−') + Math.abs(v) + ' k hours'; }, hint: 'More usable time at home / cheaper commuting: supply shifts right by this many hours at every wage.', onInput: function (v) { LMT.tS = v; cLM.draw(); } });
+  var sTD = TR.slider(ctlLM, { label: 'Productivity technology (shifts demand)', min: -30, max: 40, step: 1, value: 0, fmt: function (v) { return v === 0 ? 'none' : (v > 0 ? '+' : '−') + Math.abs(v) + ' k hours'; }, hint: 'Negative = automation that replaces labour: demand shifts left.', onInput: function (v) { LMT.tD = v; cLM.draw(); } });
+  TR.slider(ctlLM, { label: 'Supply steepness', min: 0.4, max: 2.5, step: 0.1, value: LMB.d, fmt: f1, hint: 'Steeper = hours respond little to the wage (like a backward-bending or inelastic supply).', onInput: function (v) { LMB.d = v; cLM.draw(); } });
+  TR.slider(ctlLM, { label: 'Demand steepness', min: 0.4, max: 2.5, step: 0.1, value: LMB.b, fmt: f1, onInput: function (v) { LMB.b = v; cLM.draw(); } });
+  TR.button('#btn-lm', 'Reset', function () { LMB = { a: 90, b: 1, c: 10, d: 1 }; LMT = { tS: 0, tD: 0 }; sTS.set(0); sTD.set(0); ctlLM.querySelectorAll('input[type=range]').forEach(function (i, n) { if (n === 2) i.value = 1; if (n === 3) i.value = 1; i.dispatchEvent(new Event('input')); }); cLM.draw(); });
+  cLM.draw();
 })();

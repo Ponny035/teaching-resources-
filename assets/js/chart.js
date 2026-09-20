@@ -243,9 +243,30 @@
     });
     var api = {
       get: function () { return cur; },
-      set: function (v) { cur = v; btns.forEach(function (b, i) { b.setAttribute('aria-pressed', String(opts[i][0] === v)); }); }
+      set: function (v) { cur = v; btns.forEach(function (b, i) { b.setAttribute('aria-pressed', String(opts[i][0] === v)); }); },
+      setLabels: function (labels) { btns.forEach(function (b, i) { b.textContent = labels[i]; }); }
     };
     api.set(value);
+    return api;
+  }
+  /* Who is the tax / subsidy imposed on?  'N' = net effect only (nothing specific, no curve shifts),
+     'D' = the demand side (consumers / buyers / employers), 'S' = the supply side (producers / sellers / workers).
+     Call .setKind(isTax) to relabel the buttons "Tax ..." or "Subsidy ...". */
+  function payer(host, value, onChange, opts) {
+    opts = opts || {};
+    host = typeof host === 'string' ? document.querySelector(host) : host;
+    var box = el('div', 'ctl', null, host), dName = opts.dName || 'consumers (C)', sName = opts.sName || 'producers (P)';
+    box.innerHTML = '<p class="ctl-title" style="margin:0 0 8px">' + (opts.title || 'Who is it imposed on?') + '</p>';
+    var api = seg(box, [['N', 'Net effect only'], ['D', 'To ' + dName], ['S', 'To ' + sName]], value, onChange);
+    api.kindTax = true;
+    api.setKind = function (isTax) {
+      if (api.kindTax === isTax && api.labeled) return;
+      api.kindTax = isTax; api.labeled = true;
+      var w = isTax ? 'Tax' : 'Subsidy';
+      api.setLabels([w + ' (net effect only)', w + ' to ' + dName, w + ' to ' + sName]);
+    };
+    api.setKind(true);
+    api.el = box; api.hide = function (b) { box.hidden = !!b; };
     return api;
   }
   function button(host, label, onClick, cls) {
@@ -276,7 +297,7 @@
   }
 
   global.TR = {
-    chart: chart, slider: slider, seg: seg, button: button, stats: stats, message: message, legend: legend,
+    chart: chart, slider: slider, seg: seg, payer: payer, button: button, stats: stats, message: message, legend: legend,
     clamp: clamp, fmt: fmt, money: money, bisect: bisect, el: el
   };
 })(window);

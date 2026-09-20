@@ -143,9 +143,9 @@
   /* ===================================================================== 3B */
   var FC = 100, K = 1;
   var CC = costs(FC, K);
-  var MK = { n: 6, m: 16, t: 0 }, timer = null;      // t: per-unit tax on firms (negative = subsidy)
+  var MK = { n: 6, m: 16, t: 0 }, timer = null, payer3 = 'N';      // payer3: 'N' net effect only, 'S' sellers (shifts supply), 'D' buyers (shifts demand)      // t: per-unit tax on firms (negative = subsidy)
   function legendB() {
-    TR.legend('#legend-b', [['demand', 'Market demand'], ['supply', 'Market supply = n × firm MC'], ['ghost', 'Long-run price (min ATC)'], ['supply dash', 'Supply + tax (or − subsidy)'], ['mc', 'Firm MC'], ['atc', 'Firm ATC']]
+    TR.legend('#legend-b', [['demand', 'Market demand'], ['supply', 'Market supply = n × firm MC'], ['ghost', 'Long-run price (min ATC)'], ['supply dash', 'Supply + tax (if on sellers)'], ['demand dash', 'Demand − tax (if on buyers)'], ['mc', 'Firm MC'], ['atc', 'Firm ATC']]
       .concat(SIMPLE ? [] : [['avc', 'Firm AVC']]).concat([['box gold', 'Tax revenue / subsidy cost']]));
   }
   legendB();
@@ -177,19 +177,31 @@
     var pts = [], pts2 = [];
     for (var qf = 15; qf <= QMAX; qf += 0.25) { var x = MK.n * qf, y = CC.MC(qf); if (x > 720 || y > 30) break; pts.push([x, y]); if (y + t <= 30 && y + t >= 0) pts2.push([x, y + t]); }
     if (pts.length > 1) c.pline(pts, 'supply');
-    if (taxed && pts2.length > 1) c.pline(pts2, 'supply dash thin');
+    if (taxed && payer3 === 'S' && pts2.length > 1) c.pline(pts2, 'supply dash thin');
+    if (taxed && payer3 === 'D') c.line(0, 30 - t, 720, 30 - t - 720 / MK.m, 'demand dash thin');
     if (pts.length) c.text(pts[pts.length - 1][0], pts[pts.length - 1][1], 'Supply (' + MK.n + ' firms)', 'big', { anchor: 'start', dx: 8, dy: 14 });
-    c.dot(st.Q, st.P, 'ink', 6.5); c.drop(st.Q, st.P, 'Q=' + Math.round(st.Q), 'P=$' + f1(st.P));
-    if (taxed && st.q > 0) { c.dot(st.Q, st.Ps, 'supply', 5); c.text(st.Q, st.Ps, 'Firms get $' + f1(st.Ps), 'soft', { anchor: 'start', dx: 10, dy: 14 }); }
+    var qy = (taxed && payer3 === 'D') ? st.Ps : st.P;              // new E*: the shifted curve meets the other curve
+    if (taxed && payer3 === 'N') {                                   // net effect only: just the wedge at the new quantity
+      c.line(st.Q, Math.max(st.P, st.Ps), st.Q, 0, 'drop'); c.text(st.Q, 0, 'Q=' + Math.round(st.Q), 'soft', { dy: -7 });
+      c.dot(st.Q, st.P, 'demand', 5.5); c.text(st.Q, st.P, 'Buyers pay $' + f1(st.P), 'soft', { anchor: 'start', dx: 10, dy: -8 });
+      c.dot(st.Q, st.Ps, 'supply', 5.5); c.text(st.Q, st.Ps, 'Firms get $' + f1(st.Ps), 'soft', { anchor: 'start', dx: 10, dy: 14 });
+    } else {
+      c.dot(st.Q, qy, 'ink', 6.5); c.drop(st.Q, qy, 'Q=' + Math.round(st.Q), 'P=$' + f1(qy));
+      if (taxed && st.q > 0) {
+        if (payer3 === 'S') { c.dot(st.Q, st.Ps, 'supply', 5); c.text(st.Q, st.Ps, 'Firms get $' + f1(st.Ps), 'soft', { anchor: 'start', dx: 10, dy: 14 }); }
+        else { c.dot(st.Q, st.P, 'demand', 5); c.text(st.Q, st.P, 'Buyers pay $' + f1(st.P), 'soft', { anchor: 'start', dx: 10, dy: -8 }); }
+      }
+    }
   };
   b2.render = function (c) {
     var st = stateB();
     var t = MK.t, taxed = Math.abs(t) > 0.05;
+    if (typeof payB3 !== 'undefined' && payB3) payB3.setKind(t >= 0);
     if (st.q > 0) c.rect(0, CC.ATC(st.q), st.q, st.Ps, st.profit >= 0 ? 'green' : 'red');
     drawCosts(c, CC, { noAFC: true, simple: SIMPLE });
     if (taxed) { c.line(0, st.P, QMAX, st.P, 'ink dash thin'); c.text(QMAX - 0.4, st.P, 'Consumers pay $' + f1(st.P), 'soft', { anchor: 'end', dy: -7 }); }
     c.line(0, st.Ps, QMAX, st.Ps, 'price');
-    c.text(0.4, st.Ps, taxed ? 'Firm gets P − tax = MR' : 'P = MR', 'big', { anchor: 'start', dy: -8 });
+    c.text(0.4, st.Ps, taxed ? (payer3 === 'D' ? 'Market price = MR' : 'Firm gets P − tax = MR') : 'P = MR', 'big', { anchor: 'start', dy: -8 });
     if (st.q > 0) { c.dot(st.q, st.Ps, 'green', 6.5); c.line(st.q, st.Ps, st.q, 0, 'drop'); c.text(st.q, 0, 'q=' + f1(st.q), 'soft', { dy: -8 }); }
 
     var status = st.profit > 0.5 ? 'Entry' : st.profit < -0.5 ? 'Exit' : 'Stable';
@@ -204,7 +216,7 @@
     if (st.profit > 0.5) { msg = 'Firms earn <b>positive economic profit</b> (' + money(st.profit) + ' each). Profit signals attract <b>entry</b>: supply shifts right and price falls.'; kind = 'good'; }
     else if (st.profit < -0.5) { msg = 'Firms make <b>losses</b> (' + money(-st.profit) + ' each). Some <b>exit</b>, supply shifts left and price rises.'; kind = 'bad'; }
     else { msg = '<b>Long-run equilibrium.</b> P ≈ min ATC, economic profit ≈ 0. No incentive to enter or exit.'; kind = 'good'; }
-    if (taxed) msg += ' <b>' + (t > 0 ? 'Tax' : 'Subsidy') + ':</b> consumers pay ' + money(st.P, 2) + ' but firms keep only ' + money(st.Ps, 2) + '. With entry and exit, firms end up receiving the minimum ATC (' + money(CC.minATC.v, 2) + '), so in the long run consumers pay ' + money(CC.minATC.v + t, 2) + ' — the whole ' + (t > 0 ? 'tax' : 'subsidy') + ' is passed on to consumers (constant-cost industry).';
+    if (taxed) msg += ' <i>' + (payer3 === 'N' ? 'Net effect only: no side is singled out, so no curve is shifted' : 'The ' + (t > 0 ? 'tax' : 'subsidy') + ' is imposed on ' + (payer3 === 'S' ? 'sellers, so the supply curve shifts' : 'buyers, so the demand curve shifts') + ' — who is legally taxed does not change the result') + '.</i> <b>' + (t > 0 ? 'Tax' : 'Subsidy') + ':</b> consumers pay ' + money(st.P, 2) + ' but firms keep only ' + money(st.Ps, 2) + '. With entry and exit, firms end up receiving the minimum ATC (' + money(CC.minATC.v, 2) + '), so in the long run consumers pay ' + money(CC.minATC.v + t, 2) + ' — the whole ' + (t > 0 ? 'tax' : 'subsidy') + ' is passed on to consumers (constant-cost industry).';
     TR.message('#msg-b', msg, kind);
   };
 
@@ -213,6 +225,7 @@
   segB = TR.seg(ctlB, DETAIL, 'full', setDetail);
   var sN = TR.slider(ctlB, { label: 'Number of firms', min: 1, max: 30, step: 1, value: MK.n, fmt: function (v) { return v; }, onInput: function (v) { MK.n = v; drawB(); } });
   var sTb = TR.slider(ctlB, { label: 'Per-unit tax on firms (negative = subsidy)', min: -5, max: 10, step: 0.5, value: MK.t, fmt: function (v) { return v < 0 ? 'Subsidy $' + Math.abs(v).toFixed(1) : v === 0 ? 'None' : 'Tax $' + v.toFixed(1); }, hint: 'Firms keep only P − tax per unit.', onInput: function (v) { MK.t = v; drawB(); } });
+  var payB3 = TR.payer(ctlB, payer3, function (v) { payer3 = v; drawB(); });
   var sM = TR.slider(ctlB, { label: 'Market demand size', min: 10, max: 24, step: 1, value: MK.m, fmt: function (v) { return v; }, hint: 'A demand boom shifts the demand curve right.', onInput: function (v) { MK.m = v; drawB(); } });
 
   function step() {

@@ -13,13 +13,13 @@
      Cournot: SR has n firms; LR has free entry so per-firm profit -> 0.
      Monopolistic competition: SR demand vs LR demand after entry. Monopoly / PPD: barriers, so SR = LR. */
   var M = { a: 100, b: 1, c: 20, F: 400, n: 2, t: 0 };     // t: per-unit tax (negative = subsidy) on the firms
-  var mode = 'monopoly', snap = null;
+  var mode = 'monopoly', snap = null, payer4 = 'N';      // payer4: 'N' net effect only, 'S' firms (shifts MC), 'D' buyers (shifts demand)
   var XM = 150, YM = 120, A0 = 100, GAM = 1.5;        // A0: demand height before a "boom"; GAM: SR supply curvature
 
   var cA = TR.chart('#chart-a', { xmax: XM, ymax: YM, xstep: 25, ystep: 20, xlabel: 'Quantity', ylabel: 'Price ($)', yfmt: yfmt, aspect: 0.95, maxH: 480 });
   var cA2 = TR.chart('#chart-a2', { xmax: XM, ymax: YM, xstep: 25, ystep: 20, xlabel: 'Quantity', ylabel: 'Price ($)', yfmt: yfmt, aspect: 0.95, maxH: 480 });
   function drawA() { cA.draw(); cA2.draw(); }
-  TR.legend('#legend-a', [['demand', 'Demand'], ['mr', 'Marginal revenue (MR)'], ['mc', 'Marginal cost (MC) / supply'], ['atc', 'ATC'], ['ghost', 'Demand / MC before the shift or tax'], ['box demand', 'Consumer surplus'], ['box supply', 'Producer surplus / profit'], ['box green', 'Profit over ATC'], ['box gold', 'Tax revenue / subsidy cost'], ['box red', 'Deadweight loss / loss']]);
+  TR.legend('#legend-a', [['demand', 'Demand'], ['mr', 'Marginal revenue (MR)'], ['mc', 'Marginal cost (MC) / supply'], ['atc', 'ATC'], ['ghost', 'Demand / MC before the shift or tax'], ['demand dash', 'Demand net of tax (if on buyers)'], ['box demand', 'Consumer surplus'], ['box supply', 'Producer surplus / profit'], ['box green', 'Profit over ATC'], ['box gold', 'Tax revenue / subsidy cost'], ['box red', 'Deadweight loss / loss']]);
 
   /* A per-unit tax t raises the firms' marginal cost to cE = c + t (a subsidy lowers it).
      Consumers pay P, firms keep P - t, government gets t·Q.  Efficient benchmark uses the true cost c. */
@@ -63,12 +63,18 @@
     var comp = mode === 'competition', sr = hz === 'sr', taxed = Math.abs(t) > 0.05;
     var S0 = function (q) { return cc * Math.pow(q / (o.Q0 || 1), GAM); };
     var showATC = (mode === 'monopoly' || mode === 'monopc') && M.F > 0;
+    /* Who is taxed: on sellers the MC line moves up by t; on buyers the demand the firm sees moves down by t and MC stays at c.
+       Quantity and both prices are identical either way; only the picture changes. */
+    var pNet = payer4 === 'N' && taxed, pD = (payer4 === 'D' || pNet) && taxed, aN = aD - (pD ? t : 0), cL = pD ? cc : cE, pr = pD ? o.P - t : o.P;
+    var profLo = pD ? cc : cE, profHi = pD ? pr : o.P;
+    var taxLo = pD ? Math.min(pr, o.P) : Math.min(cc, cE), taxHi = pD ? Math.max(pr, o.P) : Math.max(cc, cE);
+    var atcRaw = comp && sr ? (o.FC0 + o.VC(o.Q)) / o.Q : 0, tS = pD ? 0 : t;
 
     /* ---- shaded areas ---- */
     if (comp) {
       c.poly([[0, a], [o.Q, o.P], [0, o.P]], 'demand');
-      if (sr) c.rect(0, (o.FC0 + o.VC(o.Q)) / o.Q + t, o.Q, o.P, o.profit >= 0 ? 'green' : 'red');
-      if (taxed) { if (sr) c.poly([[0, 0], [o.Q, S0(o.Q)], [o.Q, S0(o.Q) + t], [0, t]], 'gold'); else c.rect(0, Math.min(cc, cE), o.Q, Math.max(cc, cE), 'gold'); }
+      if (sr) c.rect(0, atcRaw + tS, o.Q, pD ? pr : o.P, o.profit >= 0 ? 'green' : 'red');
+      if (taxed) { if (sr && !pD) c.poly([[0, 0], [o.Q, S0(o.Q)], [o.Q, S0(o.Q) + t], [0, t]], 'gold'); else c.rect(0, taxLo, o.Q, taxHi, 'gold'); }
       if (o.DWL > 0.5) {
         if (sr) {          // area between demand and the (untaxed) SR supply curve, from Q to the no-tax quantity
           var lo = Math.min(o.Q, o.Qnt), hi = Math.max(o.Q, o.Qnt), up = [], dn = [];
@@ -77,41 +83,42 @@
         } else c.poly([[o.Q, o.P], [o.Qeff, cc], [o.Q, cc]], 'red');
       }
     } else if (mode === 'ppd') {
-      c.poly([[0, a], [o.Qc, cE], [0, cE]], 'supply');
-      if (taxed) c.rect(0, Math.min(cc, cE), o.Qc, Math.max(cc, cE), 'gold');
+      if (pD) { c.poly([[0, aN], [o.Qc, cc], [0, cc]], 'supply'); c.poly([[0, aN], [o.Qc, cc], [o.Qc, cc + t], [0, aD]], 'gold'); }
+      else { c.poly([[0, a], [o.Qc, cE], [0, cE]], 'supply'); if (taxed) c.rect(0, Math.min(cc, cE), o.Qc, Math.max(cc, cE), 'gold'); }
       if (o.DWL > 0.5) c.poly([[o.Qc, cE], [o.Qeff, cc], [o.Qc, cc]], 'red');
     } else {
       c.poly([[0, aD], [o.Q, o.P], [0, o.P]], 'demand');
-      c.rect(0, cE, o.Q, o.P, 'supply');
-      if (taxed) c.rect(0, Math.min(cc, cE), o.Q, Math.max(cc, cE), 'gold');
+      c.rect(0, profLo, o.Q, profHi, 'supply');
+      if (taxed) c.rect(0, taxLo, o.Q, taxHi, 'gold');
       if (o.DWL > 0.5) c.poly([[o.Q, o.P], [o.Qeff, cc], [o.Q, cc]], 'red');
     }
 
     /* ---- curves ---- */
     if ((mode === 'monopc' && aD < a - 0.01) || (comp && Math.abs(a - A0) > 0.5)) c.line(0, mode === 'monopc' ? a : A0, XM, (mode === 'monopc' ? a : A0) - b * XM, 'ghost');
-    if (showATC) c.curve(function (q) { return cE + M.F / q; }, 1, XM, 'atc');
-    if (comp && sr) c.curve(function (q) { return (o.FC0 + o.VC(q)) / q + t; }, 1, XM, 'atc');
-    if (taxed && !(comp && sr)) c.line(0, cc, XM, cc, 'ghost');
-    if (mode === 'monopoly' || mode === 'monopc') c.line(0, aD, aD / (2 * b), 0, 'mr');
+    if (showATC) c.curve(function (q) { return cL + M.F / q; }, 1, XM, 'atc');
+    if (comp && sr) c.curve(function (q) { return (o.FC0 + o.VC(q)) / q + tS; }, 1, XM, 'atc');
+    if (taxed && !pD && !(comp && sr)) c.line(0, cc, XM, cc, 'ghost');
+    if ((mode === 'monopoly' || mode === 'monopc') && !pNet) c.line(0, aN, aN / (2 * b), 0, 'mr');
     c.line(0, aD, XM, D(XM), 'demand', { drag: 'D' });
-    if (comp && sr) { if (taxed) c.curve(S0, 0, XM, 'ghost'); c.curve(function (q) { return S0(q) + t; }, 0, XM, 'mc'); }
-    else c.line(0, cE, XM, cE, 'mc', { drag: 'MC' });
+    if (pD && !pNet) c.line(0, aN, XM, aN - b * XM, 'demand dash thin');
+    if (comp && sr) { if (taxed && !pD) c.curve(S0, 0, XM, 'ghost'); c.curve(function (q) { return S0(q) + tS; }, 0, XM, 'mc'); }
+    else c.line(0, cL, XM, cL, 'mc', { drag: 'MC' });
 
     /* ---- labels ---- */
     var dxl = Math.min(XM - 4, aD / b - 6);
     c.text(dxl, Math.max(4, D(dxl)), 'Demand', 'big', { anchor: 'end', dy: -8 });
-    if (comp && sr) c.text(XM * 0.8, Math.min(YM - 6, S0(XM * 0.8) + t), taxed ? 'SR supply + tax' : 'SR supply = SRMC', 'big', { anchor: 'end', dx: -6, dy: -8 });
-    else if (comp) c.text(XM - 4, cE, taxed ? 'LR supply + tax' : 'LR supply = LRAC = LRMC', 'big', { anchor: 'end', dy: -16 });
-    else c.text(120, cE, taxed ? (t > 0 ? 'MC + tax' : 'MC − subsidy') : 'MC', 'big', { dy: 18 });
-    if (mode === 'monopoly' || mode === 'monopc') c.text(aD / (2 * b), 0, 'MR', 'big', { dy: -8, dx: 10, anchor: 'start' });
-    if (comp && sr) c.text(XM * 0.9, (o.FC0 + o.VC(XM * 0.9)) / (XM * 0.9) + t, 'SR ATC', 'big', { anchor: 'end', dy: 16 });
-    if (taxed && !comp && o.Q > 8 && Math.abs(cE - cc) > 9) c.text(o.Q / 2, (cc + cE) / 2, t > 0 ? 'Tax revenue' : 'Subsidy cost', 'soft');
+    if (comp && sr) c.text(XM * 0.8, Math.min(YM - 6, S0(XM * 0.8) + tS), taxed && !pD ? 'SR supply + tax' : 'SR supply = SRMC', 'big', { anchor: 'end', dx: -6, dy: -8 });
+    else if (comp) c.text(XM - 4, cL, taxed && !pD ? 'LR supply + tax' : 'LR supply = LRAC = LRMC', 'big', { anchor: 'end', dy: -16 });
+    else c.text(120, cL, taxed && !pD ? (t > 0 ? 'MC + tax' : 'MC − subsidy') : 'MC', 'big', { dy: 18 });
+    if ((mode === 'monopoly' || mode === 'monopc') && !pNet) c.text(aN / (2 * b), 0, 'MR', 'big', { dy: -8, dx: 10, anchor: 'start' });
+    if (comp && sr) c.text(XM * 0.9, (o.FC0 + o.VC(XM * 0.9)) / (XM * 0.9) + tS, 'SR ATC', 'big', { anchor: 'end', dy: 16 });
+    if (taxed && !comp && o.Q > 8 && Math.abs(taxHi - taxLo) > 9) c.text(o.Q / 2, (taxLo + taxHi) / 2, t > 0 ? 'Tax revenue' : 'Subsidy cost', 'soft');
 
-    if (comp) { c.text(o.Q * 0.28, o.P + (a - o.P) * 0.3, 'CS', 'big'); if (sr && Math.abs(o.profit) > 60) c.text(o.Q / 2, (o.P + (o.FC0 + o.VC(o.Q)) / o.Q + t) / 2, o.profit >= 0 ? 'Profit' : 'Loss', 'big'); }
-    else if (mode === 'ppd') c.text(o.Qc * 0.28, cE + (a - cE) * 0.27, 'Producer surplus', 'big');
+    if (comp) { c.text(o.Q * 0.28, o.P + (a - o.P) * 0.3, 'CS', 'big'); if (sr && Math.abs(o.profit) > 60) c.text(o.Q / 2, ((pD ? pr : o.P) + atcRaw + tS) / 2, o.profit >= 0 ? 'Profit' : 'Loss', 'big'); }
+    else if (mode === 'ppd') c.text(o.Qc * 0.28, cL + (a - cL) * 0.27, 'Producer surplus', 'big');
     else {
       if (o.Q > 12 && aD - o.P > 12) c.text(o.Q * 0.3, o.P + (aD - o.P) * 0.3, 'CS', 'big');
-      if (o.Q > 12 && o.P - cE > 12) c.text(o.Q / 2, (o.P + cE) / 2, 'Profit', 'big');
+      if (o.Q > 12 && profHi - profLo > 12) c.text(o.Q / 2, (profHi + profLo) / 2, 'Profit', 'big');
       if (o.DWL > 60) c.text(o.Q + (o.Qeff - o.Q) * 0.32, cc + (o.P - cc) * 0.28, 'DWL', 'big');
     }
 
@@ -122,10 +129,11 @@
     if (!comp && mode !== 'ppd') {
       c.dot(o.Qeff, cc, 'hollow', 5);
       if (!c.narrow) c.text(o.Qeff, cc, taxed ? 'Efficient Q (no tax)' : 'Competitive Q', 'soft', { dy: 18 });
-      if (mode === 'monopoly' || mode === 'monopc') { c.dot(o.Q, cE, 'aqua', 5.5); if (!c.narrow) c.text(o.Q, cE, 'MR = MC', 'soft', { dy: 18, dx: 4, anchor: 'start' }); }
+      if ((mode === 'monopoly' || mode === 'monopc') && !pNet) { c.dot(o.Q, cL, 'aqua', 5.5); if (!c.narrow) c.text(o.Q, cL, 'MR = MC', 'soft', { dy: 18, dx: 4, anchor: 'start' }); }
     }
     var qh = clamp(0.25 * aD / b, 6, 120); c.handle('D', qh, aD - b * qh);
-    if (!(comp && sr)) c.handle('MC', 138, cE);
+    if (pD && o.Q > 0) { c.dot(o.Q, pr, 'supply', 5); if (!c.narrow) c.text(o.Q, pr, 'Firm gets $' + f1(pr), 'soft', { anchor: 'start', dx: 10, dy: -8 }); }
+    if (!(comp && sr)) c.handle('MC', 138, cL);
     return o;
   }
   cA.render = function (c) { renderA(c, 'sr'); summaryA(); };
@@ -133,6 +141,7 @@
 
   function summaryA() {
     var s = outcome('sr'), l = outcome('lr'), cc = M.c, t = M.t, taxed = Math.abs(t) > 0.05;
+    if (typeof payA !== 'undefined' && payA) payA.setKind(t >= 0);
     var pfLabel = mode === 'cournot' ? 'Profit per firm' : mode === 'competition' ? 'Economic profit' : 'Profit (after F)';
     var col = function (v) { return v > 0.5 ? 'pos' : v < -0.5 ? 'neg' : ''; };
     var row = function (label, a, b, cls) { return '<tr><td>' + label + '</td><td class="' + (cls ? cls(s) : '') + '">' + a + '</td><td class="' + (cls ? cls(l) : '') + '">' + b + '</td></tr>'; };
@@ -168,6 +177,7 @@
       var s0 = outcome('sr', 0), l0 = outcome('lr', 0), pct = function (x) { return Math.round(100 * x / t) + '%'; };
       msg += ' <b>' + (t > 0 ? 'Tax' : 'Subsidy') + ' pass-through:</b> the price to consumers changes by ' + money(s.P - s0.P, 1) + ' in the short run (' + pct(s.P - s0.P) + ' of the ' + (t > 0 ? 'tax' : 'subsidy') + ') and ' + money(l.P - l0.P, 1) + ' in the long run (' + pct(l.P - l0.P) + '). Firms with more market power (monopoly) pass through only about half with linear demand; with free entry and constant costs, competitive firms pass through all of it.';
     }
+    if (taxed) msg += (payer4 === 'N' ? ' <i>Net effect only: the ' + (t > 0 ? 'tax' : 'subsidy') + ' is not assigned to either side, so no curve is shifted — you see the wedge, the quantity and the surplus split. Choose “to consumers” or “to producers” to see the curve move (MR = MC is drawn there).</i>' : ' <i>' + (t > 0 ? 'Tax' : 'Subsidy') + ' imposed on ' + (payer4 === 'S' ? 'the firms, so the MC curve shifts' : 'the buyers, so the demand the firm sees shifts') + '. Who is legally taxed does not change the quantity, the price consumers pay or the price firms receive.</i>');
     TR.message('#msg-a', msg, kind);
   }
 
@@ -197,6 +207,7 @@
   sF = TR.slider(ctlA, { label: 'Fixed cost F', min: 0, max: 1600, step: 100, value: M.F, fmt: money, hint: 'Shown as ATC = MC + F/Q. Drives long-run entry.', onInput: function (v) { M.F = v; drawA(); } });
   sB = TR.slider(ctlA, { label: 'Demand steepness', min: 0.8, max: 2, step: 0.1, value: M.b, fmt: f1, onInput: function (v) { M.b = v; drawA(); } });
   sT = TR.slider(ctlA, { label: 'Per-unit tax (negative = subsidy)', min: -15, max: 40, step: 1, value: M.t, fmt: function (v) { return v < 0 ? 'Subsidy $' + Math.abs(v) : v === 0 ? 'None' : 'Tax $' + v; }, hint: 'Paid by the firms: raises (or lowers) marginal cost by this amount.', onInput: function (v) { M.t = v; drawA(); } });
+  var payA = TR.payer(ctlA, payer4, function (v) { payer4 = v; drawA(); });
   syncControls();
   TR.button('#btn-a', 'Reset', function () { M = { a: 100, b: 1, c: 20, F: 400, n: 2, t: 0 }; if (mode === 'competition') M.a = 115; sN.set(2); sF.set(400); sB.set(1); sT.set(0); drawA(); });
   drawA();
@@ -204,8 +215,8 @@
   /* ===================================================================== 4B */
   var G = { a1: 60, b1: 0.6, a2: 100, b2: 1, c: 20, t: 0 };     // t: per-unit tax on the firm (negative = subsidy); marginal cost becomes c + t
   var cEff = function (tt) { return Math.max(0.01, G.c + (tt == null ? G.t : tt)); };
-  var snapB = null;
-  TR.legend('#legend-b', [['demand', 'Demand'], ['mr', 'MR'], ['mc', 'MC'], ['ink dash', 'Single (uniform) price'], ['ghost', 'MC before tax'], ['box supply', 'Profit at group’s own price'], ['box gold', 'Tax revenue / subsidy cost']]);
+  var snapB = null, payer4b = 'N';      // payer4b: 'N' net effect only, 'S' firm (shifts MC), 'D' buyers (shifts demand)
+  TR.legend('#legend-b', [['demand', 'Demand'], ['mr', 'MR'], ['mc', 'MC'], ['ink dash', 'Single (uniform) price'], ['ghost', 'MC before tax'], ['demand dash', 'Demand net of tax (if on buyers)'], ['box supply', 'Profit at group’s own price'], ['box gold', 'Tax revenue / subsidy cost']]);
   var b1 = TR.chart('#chart-b1', { xmax: 120, ymax: 120, xstep: 20, ystep: 20, xlabel: 'Quantity', ylabel: 'Price ($)', yfmt: yfmt, aspect: 0.9, maxH: 420 });
   var b2 = TR.chart('#chart-b2', { xmax: 120, ymax: 120, xstep: 20, ystep: 20, xlabel: 'Quantity', ylabel: 'Price ($)', yfmt: yfmt, aspect: 0.9, maxH: 420 });
 
@@ -225,20 +236,25 @@
     return best;
   }
   function drawGroup(c, a, b, o, uni, which) {
-    var XM2 = 120, cE = cEff(), taxed = Math.abs(G.t) > 0.05;
-    c.rect(0, cE, o.Q, o.P, 'supply');
-    if (taxed) c.rect(0, Math.min(G.c, cE), o.Q, Math.max(G.c, cE), 'gold');
-    c.line(0, a, a / (2 * b), 0, 'mr');
+    var XM2 = 120, cE = cEff(), taxed = Math.abs(G.t) > 0.05, pNet = payer4b === 'N' && taxed, pD = (payer4b === 'D' || pNet) && taxed;
+    var aN = a - (pD ? G.t : 0), cL = pD ? G.c : cE, pr = pD ? o.P - G.t : o.P;                  // buyers taxed: demand shifts, MC stays at c
+    var pLo = pD ? G.c : cE, pHi = pD ? pr : o.P;
+    var tLo = pD ? Math.min(pr, o.P) : Math.min(G.c, cE), tHi = pD ? Math.max(pr, o.P) : Math.max(G.c, cE);
+    c.rect(0, pLo, o.Q, pHi, 'supply');
+    if (taxed) c.rect(0, tLo, o.Q, tHi, 'gold');
+    if (!pNet) c.line(0, aN, aN / (2 * b), 0, 'mr');
     c.line(0, a, XM2, a - b * XM2, 'demand', { drag: 'D' });
-    if (taxed) c.line(0, G.c, XM2, G.c, 'ghost');
-    c.line(0, cE, XM2, cE, 'mc');
-    if (taxed) c.text(XM2 - 2, cE, G.t > 0 ? 'MC + tax' : 'MC − subsidy', 'soft', { anchor: 'end', dy: 16 });
+    if (pD && !pNet) c.line(0, aN, XM2, aN - b * XM2, 'demand dash thin');
+    if (taxed && !pD) c.line(0, G.c, XM2, G.c, 'ghost');
+    c.line(0, cL, XM2, cL, 'mc');
+    if (taxed && !pD) c.text(XM2 - 2, cE, G.t > 0 ? 'MC + tax' : 'MC − subsidy', 'soft', { anchor: 'end', dy: 16 });
     c.line(0, uni.P, XM2, uni.P, 'ink dash thin');
     c.text(XM2 - 2, uni.P, 'Single price $' + f1(uni.P), 'soft', { anchor: 'end', dy: -7 });
     c.dot(o.Q, o.P, 'ink', 6.5);
     c.drop(o.Q, o.P, 'Q=' + f1(o.Q), 'P=$' + f1(o.P));
-    c.text(o.Q / 2, (o.P + cE) / 2, 'Profit', 'big');
-    if (taxed && Math.abs(cE - G.c) > 9 && o.Q > 10) c.text(o.Q / 2, (G.c + cE) / 2, G.t > 0 ? 'Tax' : 'Subsidy', 'soft');
+    c.text(o.Q / 2, (pLo + pHi) / 2, 'Profit', 'big');
+    if (taxed && Math.abs(tHi - tLo) > 9 && o.Q > 10) c.text(o.Q / 2, (tLo + tHi) / 2, G.t > 0 ? 'Tax' : 'Subsidy', 'soft');
+    if (pD && o.Q > 0) { c.dot(o.Q, pr, 'supply', 5); c.text(o.Q, pr, 'Firm gets $' + f1(pr), 'soft', { anchor: 'start', dx: 10, dy: -8 }); }
     var qh = clamp(0.25 * a / b, 6, 100); c.handle('D' + which, qh, a - b * qh);
   }
   b1.render = function (c) { drawGroup(c, G.a1, G.b1, groupOut(G.a1, G.b1), uniform(), 1); summaryB(); };
@@ -246,6 +262,7 @@
   function summaryB() {
     var o1 = groupOut(G.a1, G.b1), o2 = groupOut(G.a2, G.b2), u = uniform(), pd = o1.profit + o2.profit;
     var t = G.t, taxed = Math.abs(t) > 0.05, gD = o1.G + o2.G;
+    if (typeof pay4b !== 'undefined' && pay4b) pay4b.setKind(t >= 0);
     var tsD = pd + o1.CS + o2.CS + gD, tsU = u.profit + u.CS + u.G;        // total surplus includes the government's share
     var rowsB = [
       ['Price group 1 / 2', money(o1.P, 1) + ' / ' + money(o2.P, 1), 'key'],
@@ -262,6 +279,7 @@
       var n1 = groupOut(G.a1, G.b1, 0), n2 = groupOut(G.a2, G.b2, 0), pc = function (x) { return Math.round(100 * x / t) + '%'; };
       msg += ' <b>' + (t > 0 ? 'Tax' : 'Subsidy') + ' pass-through:</b> group 1’s price changes by ' + money(o1.P - n1.P, 1) + ' (' + pc(o1.P - n1.P) + ' of the ' + (t > 0 ? 'tax' : 'subsidy') + ') and group 2’s by ' + money(o2.P - n2.P, 1) + ' (' + pc(o2.P - n2.P) + '). With linear demand the firm passes on about half to <i>each</i> group, so the price gap between the groups barely changes, and the government ' + (t > 0 ? 'collects ' : 'pays ') + money(Math.abs(gD)) + ' when the firm discriminates.';
     }
+    if (taxed) msg += (payer4b === 'N' ? ' <i>Net effect only: no side is singled out, so no curve is shifted.</i>' : ' <i>The ' + (t > 0 ? 'tax' : 'subsidy') + ' is imposed on ' + (payer4b === 'S' ? 'the firm, so its marginal cost shifts' : 'buyers, so the demand the firm sees shifts') + ' — the result is the same either way.</i>');
     TR.message('#msg-b', msg);
   }
   function drawB() { b1.draw(); b2.draw(); }
@@ -274,13 +292,14 @@
   var sb2 = TR.slider(ctlB, { label: 'Group 2 steepness (adults)', min: 0.6, max: 2, step: 0.1, value: G.b2, fmt: f1, onInput: function (v) { G.b2 = v; drawB(); } });
   var sbc = TR.slider(ctlB, { label: 'Marginal cost', min: 0, max: 50, step: 1, value: G.c, fmt: money, onInput: function (v) { G.c = v; G.a1 = Math.max(G.a1, cEff() + 10); G.a2 = Math.max(G.a2, cEff() + 10); drawB(); } });
   var sbt = TR.slider(ctlB, { label: 'Per-unit tax (negative = subsidy)', min: -15, max: 40, step: 1, value: G.t, fmt: function (v) { return v < 0 ? 'Subsidy $' + Math.abs(v) : v === 0 ? 'None' : 'Tax $' + v; }, hint: 'Paid by the firm: raises (or lowers) its marginal cost by this amount in both groups.', onInput: function (v) { G.t = v; G.a1 = Math.max(G.a1, cEff() + 10); G.a2 = Math.max(G.a2, cEff() + 10); drawB(); } });
+  var pay4b = TR.payer(ctlB, payer4b, function (v) { payer4b = v; drawB(); });
   TR.button(ctlB, 'Make demands identical', function () { G.a1 = G.a2; G.b1 = G.b2; sb1.set(G.b1); drawB(); });
   drawB();
 
   /* ===================================================================== 4C */
   var W = { a: 100, b: 1, c: 10, d: 0.5, minw: 0, t: 0 };     // t: payroll tax per worker paid by the employer (negative = wage subsidy)
-  var wMode = 'monopsony', snapW = null;
-  TR.legend('#legend-c', [['demand', 'Labor demand = MRP'], ['supply', 'Labor supply'], ['social', 'Marginal cost of labor (MCL)'], ['red dash', 'Minimum wage'], ['box supply', 'Workers’ surplus'], ['box demand', 'Employer’s surplus'], ['box gold', 'Tax revenue / subsidy cost'], ['ghost', 'MRP before tax'], ['box red', 'Deadweight loss']]);
+  var wMode = 'monopsony', snapW = null, payer4c = 'N';      // 'N' net effect only, 'D' employer pays (demand shifts), 'S' workers pay (supply shifts)
+  TR.legend('#legend-c', [['demand', 'Labor demand = MRP'], ['supply', 'Labor supply'], ['social', 'Marginal cost of labor (MCL)'], ['red dash', 'Minimum wage'], ['box supply', 'Workers’ surplus'], ['box demand', 'Employer’s surplus'], ['box gold', 'Tax revenue / subsidy cost'], ['ghost', 'MRP before tax'], ['supply dash', 'Supply + tax (if on workers)'], ['box red', 'Deadweight loss']]);
   var cC = TR.chart('#chart-c', { xmax: 120, ymax: 120, xstep: 20, ystep: 20, xlabel: 'Workers hired (L)', ylabel: 'Wage ($)', yfmt: yfmt, aspect: 0.8, maxH: 500 });
 
   function labor() {
@@ -309,33 +328,42 @@
   }
   cC.render = function (c) {
     var a = W.a, t = W.t, aN = a - t, b = W.b, cc = W.c, d = W.d, r = labor(), XM3 = 120, taxed = Math.abs(t) > 0.05;
+    if (typeof payC4 !== 'undefined' && payC4) payC4.setKind(t >= 0);
+    var pNet = payer4c === 'N' && taxed, pS = (payer4c === 'S' || pNet) && taxed;      // workers pay (or net effect only): gross demand stays, supply-side wedge
     var MRP = function (l) { return a - b * l; }, MRPn = function (l) { return aN - b * l; }, Sup = function (l) { return cc + d * l; };
+    var aTop = pS ? a : aN, MRPd = pS ? MRP : MRPn, wEmp = r.w + t;    // demand drawn solid; wage the employer pays = worker's wage + t
 
     c.poly([[0, r.w], [r.L, r.w], [r.L, Sup(r.L)], [0, cc]], 'supply');
-    c.poly([[0, aN], [r.L, MRPn(r.L)], [r.L, r.w], [0, r.w]], 'demand');
-    if (taxed) c.poly([[0, aN], [r.L, MRPn(r.L)], [r.L, MRP(r.L)], [0, a]], 'gold');
+    if (pS) {
+      c.poly([[0, a], [r.L, MRP(r.L)], [r.L, wEmp], [0, wEmp]], 'demand');
+      c.poly([[0, wEmp], [r.L, wEmp], [r.L, r.w], [0, r.w]], 'gold');
+    } else {
+      c.poly([[0, aN], [r.L, MRPn(r.L)], [r.L, r.w], [0, r.w]], 'demand');
+      if (taxed) c.poly([[0, aN], [r.L, MRPn(r.L)], [r.L, MRP(r.L)], [0, a]], 'gold');
+    }
     if (Math.abs(r.Lc - r.L) > 0.05) c.poly([[r.L, MRP(r.L)], [r.L, Sup(r.L)], [r.Lc, r.wc]], 'red');
 
-    if (taxed) c.line(0, a, XM3, MRP(XM3), 'ghost');
-    c.line(0, aN, XM3, MRPn(XM3), 'demand', { drag: 'MRP' });
+    if (taxed && !pS) c.line(0, a, XM3, MRP(XM3), 'ghost');
+    c.line(0, aTop, XM3, MRPd(XM3), 'demand', { drag: 'MRP' });
     c.line(0, cc, XM3, Sup(XM3), 'supply', { drag: 'SUP' });
-    if (wMode === 'monopsony') c.line(0, cc, XM3, cc + 2 * d * XM3, 'social');
+    if (pS && !pNet) c.line(0, cc + t, XM3, cc + t + d * XM3, 'supply dash thin');
+    if (wMode === 'monopsony' && !pNet) c.line(0, cc + (pS ? t : 0), XM3, cc + (pS ? t : 0) + 2 * d * XM3, 'social');
     if (W.minw > 0) { c.line(0, W.minw, XM3, W.minw, 'red dash'); c.text(XM3, W.minw, 'Minimum wage', 'soft', { anchor: 'end', dy: -7 }); }
     if (r.unemp > 0.3) { c.pline([[r.L, W.minw], [r.L + r.unemp, W.minw]], 'red'); c.text(r.L + r.unemp / 2, W.minw, 'Unemployed', 'lbl', { dy: 16 }); }
 
-    var lx = Math.min(112, (aN - 18) / b);
-    c.text(lx, MRPn(lx), taxed ? (t > 0 ? 'MRP − payroll tax' : 'MRP + subsidy') : 'Demand (MRP)', 'big', { anchor: 'start', dx: 6, dy: 14 });
+    var lx = Math.min(112, (aTop - 18) / b);
+    c.text(lx, MRPd(lx), taxed && !pS ? (t > 0 ? 'MRP − payroll tax' : 'MRP + subsidy') : 'Demand (MRP)', 'big', { anchor: 'start', dx: 6, dy: 14 });
     var sx = Math.min(110, (108 - cc) / d);
     c.text(sx, Sup(sx), 'Supply', 'big', { anchor: 'end', dx: -6, dy: -8 });
-    if (wMode === 'monopsony') { var mx = Math.min(56, (110 - cc) / (2 * d)); c.text(mx, cc + 2 * d * mx, 'MCL', 'big', { anchor: 'end', dx: -8, dy: -6 }); }
+    if (wMode === 'monopsony' && !pNet) { var mx = Math.min(56, (110 - cc) / (2 * d)); c.text(mx, cc + 2 * d * mx, 'MCL', 'big', { anchor: 'end', dx: -8, dy: -6 }); }
 
-    if (r.L > 12) { c.text(r.L * 0.3, (r.w + Sup(r.L * 0.3)) / 2, 'Workers', 'big'); c.text(r.L * 0.3, (r.w + MRPn(r.L * 0.3)) / 2, 'Employer', 'big'); }
+    if (r.L > 12) { c.text(r.L * 0.3, (r.w + Sup(r.L * 0.3)) / 2, 'Workers', 'big'); c.text(r.L * 0.3, ((pS ? wEmp : r.w) + MRPd(r.L * 0.3)) / 2, 'Employer', 'big'); }
     if (r.DWL > 30) c.text(r.L + (r.Lc - r.L) * 0.3, (MRP(r.L) + Sup(r.L)) / 2, 'DWL', 'big', { anchor: 'start', dx: 2 });
 
     c.dot(r.L, r.w, 'ink', 6.5); c.drop(r.L, r.w, 'L=' + f1(r.L), 'w=$' + f1(r.w));
     c.dot(r.Lc, r.wc, 'hollow', 5); c.text(r.Lc, r.wc, taxed ? 'Competitive, no tax' : 'Competitive', 'soft', { dx: 10, dy: 16, anchor: 'start' });
-    if (wMode === 'monopsony' && W.minw <= r.wmT) { c.dot(r.LmT, MRPn(r.LmT), 'aqua', 5); c.text(r.LmT, MRPn(r.LmT), 'MRP = MCL', 'soft', { dy: -10 }); }
-    var qh = clamp(0.25 * aN / b, 6, 100); c.handle('MRP', qh, MRPn(qh));
+    if (wMode === 'monopsony' && !pNet && W.minw <= r.wmT) { c.dot(r.LmT, MRPd(r.LmT), 'aqua', 5); c.text(r.LmT, MRPd(r.LmT), 'MRP = MCL', 'soft', { dy: -10 }); }
+    var qh = clamp(0.25 * aTop / b, 6, 100); c.handle('MRP', qh, MRPd(qh));
     var qs2 = clamp(0.55 * (120 - cc) / d, 10, 100); c.handle('SUP', qs2, Sup(qs2));
 
     var rows = [
@@ -354,7 +382,7 @@
     if (taxed) {
       var w0 = wMode === 'competitive' ? r.wc : cc + d * (a - cc) / (b + 2 * d);          // wage with no tax, same market structure
       var free = W.minw <= (wMode === 'competitive' ? r.wcT : r.wmT);                     // minimum wage not binding
-      msg += ' <b>' + (t > 0 ? 'Payroll tax' : 'Wage subsidy') + ':</b> the employer pays ' + money(r.w + t, 1) + ' per worker, the worker receives ' + money(r.w, 1) + ', and the government ' + (t > 0 ? 'collects ' : 'pays ') + money(Math.abs(r.G)) + '.' +
+      msg += (pNet ? ' <i>Net effect only: no side is singled out, so no curve is shifted (the monopsony MCL is hidden here; choose “to workers” or “to employers” to see MRP = MCL).</i> ' : ' <i>' + (t > 0 ? 'Tax' : 'Subsidy') + ' ' + (pS ? 'paid by workers, so the supply curve shifts' : 'paid by the employer, so the demand curve shifts') + ' — the split is the same either way.</i> ') + ' <b>' + (t > 0 ? 'Payroll tax' : 'Wage subsidy') + ':</b> the employer pays ' + money(r.w + t, 1) + ' per worker, the worker receives ' + money(r.w, 1) + ', and the government ' + (t > 0 ? 'collects ' : 'pays ') + money(Math.abs(r.G)) + '.' +
         (free ? ' Workers ' + (t > 0 ? 'bear ' : 'gain ') + Math.round(100 * (w0 - r.w) / t) + '% of it (the wage moves from ' + money(w0, 1) + ' with no tax to ' + money(r.w, 1) + ').' : ' (The minimum wage is binding, so the wage does not fall.)');
     }
     TR.message('#msg-c', msg, r.DWL > 0.5 ? 'bad' : 'good');
@@ -368,7 +396,8 @@
   };
   var ctlC = document.querySelector('#ctl-c');
   TR.seg(ctlC, [['monopsony', 'Monopsony employer'], ['competitive', 'Competitive employers']], 'monopsony', function (m) { wMode = m; cC.draw(); });
-  var sTaxC = TR.slider(ctlC, { label: 'Payroll tax per worker (negative = wage subsidy)', min: -20, max: 30, step: 1, value: W.t, fmt: function (v) { return v < 0 ? 'Subsidy $' + Math.abs(v) : v === 0 ? 'None' : 'Tax $' + v; }, hint: 'Paid by the employer on top of the wage.', onInput: function (v) { W.t = v; cC.draw(); } });
+  var sTaxC = TR.slider(ctlC, { label: 'Payroll tax per worker (negative = wage subsidy)', min: -20, max: 30, step: 1, value: W.t, fmt: function (v) { return v < 0 ? 'Subsidy $' + Math.abs(v) : v === 0 ? 'None' : 'Tax $' + v; }, hint: 'Choose below whether the employer or the workers pay it.', onInput: function (v) { W.t = v; cC.draw(); } });
+  var payC4 = TR.payer(ctlC, payer4c, function (v) { payer4c = v; cC.draw(); }, { title: 'Payroll tax / subsidy is paid by', dName: 'employers', sName: 'workers' });
   TR.slider(ctlC, { label: 'Minimum wage (0 = none)', min: 0, max: 80, step: 1, value: W.minw, fmt: function (v) { return v === 0 ? 'none' : money(v); }, onInput: function (v) { W.minw = v; cC.draw(); } });
   TR.slider(ctlC, { label: 'Labor supply steepness', min: 0.2, max: 1.2, step: 0.1, value: W.d, fmt: f1, hint: 'Steeper = workers less willing to move; monopsony power is bigger.', onInput: function (v) { W.d = v; cC.draw(); } });
   cC.draw();

@@ -174,4 +174,97 @@
   };
   setLegendB();
   cB.draw();
+
+  /* ================= 1C — labour supply: the work–leisure trade-off ================= */
+  /* A worker splits Tav available hours between leisure (l) and work (L = Tav − l).
+     Income = N (unearned) + w·L is spent on consumption C. Preferences:
+        U = −0.5·C⁻² + β·ln(l)      (consumption has strongly diminishing returns; leisure is a normal good)
+     FOC:  w·C⁻³ = β / l.  A higher wage makes leisure dearer (substitution effect: work more) but the
+     worker is also richer (income effect: buy more leisure). The net effect can bend the supply curve back. */
+  var LS = { w0: 4, w1: 10, N: 150, taste: 5, tech: 0 };
+  var LT0 = 12;                                                       // usable hours per day before technology
+  var TA = function (tech) { return LT0 + (tech == null ? LS.tech : tech); };
+  var LBETA = function () { return Math.pow(10, -6.5 + 2 * LS.taste / 10); };
+  function hoursLS(w, N, T) {
+    var b = LBETA(), lo = N > 0 ? 1e-9 : Math.max(1e-9, (1e-6 - N) / w), hi = T - 1e-9;
+    var f = function (L) { return w * Math.pow(N + w * L, -3) - b / (T - L); };
+    if (f(lo) < 0) return 0;
+    return TR.bisect(f, lo, hi);
+  }
+  function utilLS(w, N, T) {                                           // utility at the optimum
+    var L = hoursLS(w, N, T), C = N + w * L, l = T - L;
+    return -0.5 * Math.pow(C, -2) + LBETA() * Math.log(l);
+  }
+  var icLS = function (U) { return function (l) { var d = LBETA() * Math.log(l) - U; return d > 0 ? 1 / Math.sqrt(2 * d) : NaN; }; };
+
+  var cL1 = TR.chart('#chart-l1', { xmax: 16, ymax: 400, xstep: 2, ystep: 100, xlabel: 'Leisure hours per day (ℓ)', ylabel: 'Consumption ($ per day)', yfmt: function (v) { return '$' + v; }, aspect: 0.9, maxH: 500 });
+  var cL2 = TR.chart('#chart-l2', { xmin: 3, xmax: 12, ymax: 40, xstep: 1, ystep: 10, xlabel: 'Hours worked per day (L) — axis starts at 3', ylabel: 'Wage ($ per hour)', yfmt: function (v) { return '$' + v; }, aspect: 0.9, maxH: 500 });
+  TR.legend('#legend-l1', [['ink thin', 'Budget line, old wage'], ['demand', 'Budget line, new wage'], ['ink dash thin', 'Compensated budget (new wage, old utility)'], ['social', 'Old indifference curve'], ['green', 'New indifference curve']]);
+  TR.legend('#legend-l2', [['demand', 'Labour supply: hours rise with the wage (substitution effect wins)'], ['red', 'Backward-bending: hours fall (income effect wins)'], ['ghost', 'Before technology']]);
+
+  function lsPoints() {
+    var T = TA(), N = LS.N, A = {}, B = {}, C = {};
+    A.L = hoursLS(LS.w0, N, T); B.L = hoursLS(LS.w1, N, T);
+    var U0 = utilLS(LS.w0, N, T), nlo = 0.01;
+    C.N = utilLS(LS.w1, nlo, T) >= U0 ? nlo : TR.bisect(function (n) { return utilLS(LS.w1, n, T) - U0; }, nlo, 6000);
+    C.L = hoursLS(LS.w1, C.N, T);
+    A.l = T - A.L; B.l = T - B.L; C.l = T - C.L;
+    A.C = N + LS.w0 * A.L; B.C = N + LS.w1 * B.L; C.C = C.N + LS.w1 * C.L;
+    return { A: A, B: B, C: C, U0: U0, U1: utilLS(LS.w1, N, T), T: T };
+  }
+  function supplyCurve(tech) {
+    var T = TA(tech), pts = [];
+    for (var w = 0.5; w <= 40.001; w += 0.5) pts.push([hoursLS(w, LS.N, T), w]);
+    return pts;
+  }
+
+  cL1.render = function (c) {
+    var q = lsPoints(), N = LS.N, T = q.T, w0 = LS.w0, w1 = LS.w1;
+    c.line(T, N, 0, N + w0 * T, 'ink thin');
+    c.line(T, N, 0, N + w1 * T, 'ic');
+    c.line(T, q.C.C - w1 * q.C.l, 0, q.C.C - w1 * q.C.l + w1 * T, 'ink dash thin');
+    c.curve(icLS(q.U1), 0.05, T, 'green thin', { n: 300 });
+    c.curve(icLS(q.U0), 0.05, T, 'social', { n: 300 });
+    [['A', q.A, 'ink'], ['C', q.C, 'hollow'], ['B', q.B, 'green']].forEach(function (p) {
+      c.dot(p[1].l, p[1].C, p[2], 7);
+      c.text(p[1].l, p[1].C, p[0], 'big', { dx: 12, dy: -10, anchor: 'start' });
+    });
+    c.dot(T, N, 'ink', 4); c.text(T, N, 'No work: $' + N, 'soft', { anchor: 'end', dy: 18, dx: -6 });
+    var se = q.C.L - q.A.L, ie = q.B.L - q.C.L, tot = q.B.L - q.A.L;
+    TR.stats('#stats-l', [
+      ['Hours at old wage ($' + w0 + ')', f1(q.A.L) + ' h'], ['Hours at new wage ($' + w1 + ')', f1(q.B.L) + ' h', 'key'],
+      ['Substitution effect A→C', (se >= 0 ? '+' : '') + f1(se) + ' h'], ['Income effect C→B', (ie >= 0 ? '+' : '') + f1(ie) + ' h'],
+      ['Net change', (tot >= 0 ? '+' : '') + f1(tot) + ' h', tot < -0.05 ? 'bad' : ''], ['Daily earnings at new wage', TR.money(w1 * q.B.L)]
+    ]);
+    var msg;
+    if (Math.abs(w1 - w0) < 0.01) msg = 'Wage unchanged — nothing moves. Slide the new wage up or down.';
+    else if (q.A.L === 0 && q.B.L === 0) msg = 'At these wages the worker prefers not to work at all (the wage is below the <b>reservation wage</b>: the value of the first hour of leisure). Raise the wage, lower non-labour income, or lower the taste for leisure.';
+    else {
+      msg = 'The wage moves from $' + w0 + ' to $' + w1 + '. <b>Substitution effect:</b> each hour of leisure now costs more, so the worker moves along the old indifference curve and works <b>' + (se >= 0 ? '+' : '') + f1(se) + ' h</b>. <b>Income effect:</b> the worker is also richer (or poorer), and leisure is a normal good, so hours change by <b>' + (ie >= 0 ? '+' : '') + f1(ie) + ' h</b>. ' +
+        (tot >= 0 ? 'Net: the substitution effect wins, so hours <b>rise</b> — the supply curve slopes up here.' : 'Net: the income effect wins, so hours <b>fall</b> — this part of the supply curve <b>bends backward</b>.');
+    }
+    TR.message('#msg-l', msg, tot < -0.05 ? 'warn' : '');
+  };
+
+  cL2.render = function (c) {
+    var q = lsPoints(), pts = supplyCurve(), i, peak = { L: -1, w: 0 };
+    if (LS.tech > 0) { var g = supplyCurve(0); for (i = 1; i < g.length; i++) c.line(g[i - 1][0], g[i - 1][1], g[i][0], g[i][1], 'ghost'); }
+    for (i = 0; i < pts.length; i++) if (pts[i][0] > peak.L) peak = { L: pts[i][0], w: pts[i][1] };
+    for (i = 1; i < pts.length; i++) {
+      if (pts[i][0] <= 0 && pts[i - 1][0] <= 0) continue;
+      c.line(pts[i - 1][0], pts[i - 1][1], pts[i][0], pts[i][1], pts[i][0] >= pts[i - 1][0] - 1e-6 ? 'demand' : 'red');   // clipped to the plot
+    }
+    if (peak.w < 39 && peak.L > 0) { c.dot(peak.L, peak.w, 'hollow', 5); c.text(peak.L, peak.w, 'Turning point $' + f1(peak.w), 'soft', { dx: -10, dy: -12, anchor: 'end' }); }
+    c.drop(q.B.L, LS.w1, f1(q.B.L) + ' h', '$' + LS.w1);
+    c.dot(q.A.L, LS.w0, 'hollow', 6); c.text(q.A.L, LS.w0, 'A', 'big', { dx: -12, dy: 4, anchor: 'end' });
+    c.dot(q.B.L, LS.w1, 'green', 7); c.text(q.B.L, LS.w1, 'B', 'big', { dx: 12, dy: -8, anchor: 'start' });
+    c.text(3.2, 37, 'Labour supply', 'big', { anchor: 'start' });
+  };
+  function drawL() { cL1.draw(); cL2.draw(); }
+  var ctlL = document.querySelector('#ctl-l');
+  TR.slider(ctlL, { label: 'New wage ($ per hour)', min: 2, max: 40, step: 1, value: LS.w1, fmt: TR.money, hint: 'The old wage is fixed at $4.', onInput: function (v) { LS.w1 = v; drawL(); } });
+  TR.slider(ctlL, { label: 'Non-labour income ($ per day)', min: 60, max: 300, step: 10, value: LS.N, fmt: TR.money, hint: 'Savings, benefits or a partner’s income. More of it makes the income effect stronger.', onInput: function (v) { LS.N = v; drawL(); } });
+  TR.slider(ctlL, { label: 'Taste for leisure', min: 2, max: 8, step: 0.5, value: LS.taste, fmt: function (v) { return v.toFixed(1); }, hint: 'Higher = values free time more, so works fewer hours.', onInput: function (v) { LS.taste = v; drawL(); } });
+  var sTechL = TR.slider(ctlL, { label: 'Time-saving technology (hours of chores saved)', min: 0, max: 4, step: 0.5, value: LS.tech, fmt: function (v) { return v.toFixed(1) + ' h'; }, hint: 'Dishwashers, delivery apps, remote work: more usable time, so labour supply shifts right.', onInput: function (v) { LS.tech = v; drawL(); } });
+  drawL();
 })();

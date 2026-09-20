@@ -182,13 +182,13 @@
   /* ===================================================================== 5C */
   /* Demand (private benefit) P = a − bQ;  private cost (supply) P = c + dQ.
      Negative externality: MSC = MPC + e.   Positive externality: MSB = MPB + e. */
-  var X = { type: 'neg', a: 100, b: 1, c: 10, d: 1, e: 20, pol: 0 }, snapX = null;
+  var X = { type: 'neg', a: 100, b: 1, c: 10, d: 1, e: 20, pol: 0 }, snapX = null, payer5 = 'N';   // payer5: 'N' net effect only, 'S' producers (shifts supply), 'D' consumers (shifts demand)
   var cC = TR.chart('#chart-c', { xmax: 120, ymax: 120, xstep: 20, ystep: 20, xlabel: 'Quantity', ylabel: 'Price / marginal value ($)', yfmt: yfmt, aspect: 0.82, maxH: 520 });
 
   function setLegend() {
     TR.legend('#legend-c', X.type === 'neg'
-      ? [['demand', 'Demand = private &amp; social benefit'], ['supply', 'Supply = private cost (MPC)'], ['social dash', 'Social cost (MSC)'], ['box red', 'Deadweight loss'], ['red', 'External cost']]
-      : [['demand', 'Demand = private benefit (MPB)'], ['social dash', 'Social benefit (MSB)'], ['supply', 'Supply = private &amp; social cost'], ['box red', 'Deadweight loss'], ['red', 'External benefit']]);
+      ? [['demand', 'Demand = private &amp; social benefit'], ['supply', 'Supply = private cost (MPC)'], ['social dash', 'Social cost (MSC)'], ['supply dash', 'Supply + tax (if on producers)'], ['demand dash', 'Demand − tax (if on consumers)'], ['box red', 'Deadweight loss'], ['red', 'External cost']]
+      : [['demand', 'Demand = private benefit (MPB)'], ['social dash', 'Social benefit (MSB)'], ['supply', 'Supply = private &amp; social cost'], ['demand dash', 'Demand + subsidy (if to consumers)'], ['supply dash', 'Supply − subsidy (if to producers)'], ['box red', 'Deadweight loss'], ['red', 'External benefit']]);
   }
   function calcX() {
     var neg = X.type === 'neg', a = X.a, b = X.b, c = X.c, d = X.d, e = X.e, den = b + d, r = { neg: neg, den: den };
@@ -204,6 +204,7 @@
   }
   cC.render = function (c) {
     var r = calcX(), neg = r.neg, a = X.a, b = X.b, cc = X.c, d = X.d, e = X.e, XM = 120;
+    if (payC5) payC5.setKind(neg);          // label the options "Tax ..." or "Subsidy ..."
     var D = function (q) { return a - b * q; }, S = function (q) { return cc + d * q; };
 
     if (Math.abs(r.Qp - r.Qs) > 0.05) c.poly([[r.Qp, r.msb(r.Qp)], [r.Qp, r.msc(r.Qp)], [r.Qs, r.msb(r.Qs)]], 'red');
@@ -211,9 +212,10 @@
     c.line(0, a, XM, D(XM), 'demand', { drag: 'D' });
     c.line(0, cc, XM, S(XM), 'supply', { drag: 'S' });
     if (neg) c.line(0, cc + e, XM, cc + e + d * XM, 'social dash'); else c.line(0, a + e, XM, a + e - b * XM, 'social dash');
-    if (X.pol > 0) {
-      if (neg) c.line(0, cc + X.pol, XM, cc + X.pol + d * XM, 'supply dash thin');
-      else c.line(0, a + X.pol, XM, a + X.pol - b * XM, 'demand dash thin');
+    if (X.pol > 0) {          // the taxed / subsidised side's curve shifts: tax = S up or D down; subsidy = S down or D up
+      var dir = neg ? 1 : -1;
+      if (payer5 === 'S') c.line(0, cc + dir * X.pol, XM, cc + dir * X.pol + d * XM, 'supply dash thin');
+      else if (payer5 === 'D') c.line(0, a - dir * X.pol, XM, a - dir * X.pol - b * XM, 'demand dash thin');
     }
 
     /* labels */
@@ -237,8 +239,13 @@
     var ps = r.msb(r.Qs);
     c.line(r.Qs, ps, r.Qs, 0, 'drop'); c.dot(r.Qs, ps, 'green', 7); c.text(r.Qs, 0, 'Optimum', 'soft', { dy: -21 });
     if (X.pol > 0) {
-      var pp = neg ? D(r.Qp) : S(r.Qp);
-      c.dot(r.Qp, pp, 'ink', 6); c.line(r.Qp, pp, r.Qp, 0, 'drop'); c.text(r.Qp, 0, 'With policy', 'soft', { dy: -35 });
+      if (payer5 === 'N') {                                    // net effect only: what the buyer pays vs what the seller receives
+        c.dot(r.Qp, D(r.Qp), 'demand', 5.5); c.dot(r.Qp, S(r.Qp), 'supply', 5.5);
+        c.line(r.Qp, Math.max(D(r.Qp), S(r.Qp)), r.Qp, 0, 'drop'); c.text(r.Qp, 0, 'With policy', 'soft', { dy: -35 });
+      } else {
+        var pp = payer5 === 'S' ? D(r.Qp) : S(r.Qp);            // intersection of the shifted curve with the other curve
+        c.dot(r.Qp, pp, 'ink', 6); c.line(r.Qp, pp, r.Qp, 0, 'drop'); c.text(r.Qp, 0, 'With policy', 'soft', { dy: -35 });
+      }
     }
     if (r.DWL > 20) c.text((2 * r.Qp + r.Qs) / 3, (r.msb(r.Qp) + r.msc(r.Qp) + r.msb(r.Qs)) / 3, 'DWL', 'big', { dx: 0, dy: 4 });
 
@@ -262,6 +269,7 @@
     else if (Math.abs(X.pol - e) < 0.6) { msg = '<b>Externality internalised.</b> A ' + word + ' of $' + f1(X.pol) + ' per unit equals the external ' + (neg ? 'cost' : 'benefit') + ', so private decision-makers now face the true social ' + (neg ? 'cost' : 'benefit') + ' and choose the efficient quantity. Deadweight loss ≈ 0.'; kind = 'good'; }
     else if (Qover(r)) { msg = 'The ' + word + ' is <b>too high</b>: it overshoots the optimum (' + f1(r.Qp) + ' vs ' + f1(r.Qs) + '), creating a new deadweight loss of ' + money(r.DWL) + '. The ideal ' + word + ' equals the marginal external ' + (neg ? 'cost' : 'benefit') + ' ($' + f1(e) + ').'; kind = 'bad'; }
     else { msg = 'The ' + word + ' <b>helps but isn’t enough</b>: quantity ' + f1(r.Qp) + ' is still ' + (neg ? 'above' : 'below') + ' the optimum ' + f1(r.Qs) + '. Deadweight loss is ' + money(r.DWL) + ' (down from ' + money(r.DWLm) + ').'; kind = 'warn'; }
+    if (X.pol > 0.05 && e >= 0.5) msg += (payer5 === 'N' ? ' <i>Net effect only: the ' + (neg ? 'tax' : 'subsidy') + ' is not assigned to a side, so no curve is shifted.</i>' : ' <i>The ' + (neg ? 'tax' : 'subsidy') + ' is imposed on ' + (payer5 === 'S' ? 'producers, so the supply curve shifts' : 'consumers, so the demand curve shifts') + ' — the efficient result is the same whichever side it is imposed on.</i>');
     TR.message('#msg-c', msg, kind);
   };
   function Qover(r) { return r.neg ? r.Qp < r.Qs : r.Qp > r.Qs; }
@@ -275,7 +283,7 @@
   };
 
   var ctlC = document.querySelector('#ctl-c');
-  var polSl;
+  var polSl, payC5;
   TR.seg(ctlC, [['neg', 'Negative externality (pollution)'], ['pos', 'Positive externality (vaccines)']], 'neg', function (t) {
     X.type = t; X.pol = 0; polSl.set(0);
     polSl.setLabel(t === 'neg' ? 'Pigouvian tax per unit' : 'Subsidy per unit');
@@ -284,6 +292,7 @@
   });
   var eSl = TR.slider(ctlC, { label: 'External cost per unit (e)', min: 0, max: 60, step: 1, value: X.e, fmt: money, onInput: function (v) { X.e = v; cC.draw(); } });
   polSl = TR.slider(ctlC, { label: 'Pigouvian tax per unit', min: 0, max: 80, step: 1, value: 0, fmt: money, onInput: function (v) { X.pol = v; cC.draw(); } });
+  payC5 = TR.payer(ctlC, payer5, function (v) { payer5 = v; cC.draw(); });
   var dSl = TR.slider(ctlC, { label: 'Supply steepness', min: 0.4, max: 2.5, step: 0.1, value: X.d, fmt: f1, onInput: function (v) { X.d = v; cC.draw(); } });
   TR.button('#btn-c', 'Set policy to the optimal level (= e)', function () { X.pol = X.e; polSl.set(X.e); cC.draw(); }, 'primary');
   TR.button('#btn-c', 'Reset', function () { X = { type: X.type, a: 100, b: 1, c: 10, d: 1, e: 20, pol: 0 }; eSl.set(20); polSl.set(0); dSl.set(1); cC.draw(); });
