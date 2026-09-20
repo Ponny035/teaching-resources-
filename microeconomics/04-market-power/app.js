@@ -202,65 +202,78 @@
   drawA();
 
   /* ===================================================================== 4B */
-  var G = { a1: 60, b1: 0.6, a2: 100, b2: 1, c: 20 };
+  var G = { a1: 60, b1: 0.6, a2: 100, b2: 1, c: 20, t: 0 };     // t: per-unit tax on the firm (negative = subsidy); marginal cost becomes c + t
+  var cEff = function (tt) { return Math.max(0.01, G.c + (tt == null ? G.t : tt)); };
   var snapB = null;
-  TR.legend('#legend-b', [['demand', 'Demand'], ['mr', 'MR'], ['mc', 'MC'], ['ink dash', 'Single (uniform) price'], ['box supply', 'Profit at group’s own price']]);
+  TR.legend('#legend-b', [['demand', 'Demand'], ['mr', 'MR'], ['mc', 'MC'], ['ink dash', 'Single (uniform) price'], ['ghost', 'MC before tax'], ['box supply', 'Profit at group’s own price'], ['box gold', 'Tax revenue / subsidy cost']]);
   var b1 = TR.chart('#chart-b1', { xmax: 120, ymax: 120, xstep: 20, ystep: 20, xlabel: 'Quantity', ylabel: 'Price ($)', yfmt: yfmt, aspect: 0.9, maxH: 420 });
   var b2 = TR.chart('#chart-b2', { xmax: 120, ymax: 120, xstep: 20, ystep: 20, xlabel: 'Quantity', ylabel: 'Price ($)', yfmt: yfmt, aspect: 0.9, maxH: 420 });
 
-  function groupOut(a, b) {
-    var Q = Math.max(0, (a - G.c) / (2 * b)), P = a - b * Q;
-    return { Q: Q, P: P, profit: (P - G.c) * Q, CS: 0.5 * (a - P) * Q, e: Q > 0 ? (P / Q) / b : Infinity };
+  function groupOut(a, b, tt) {
+    var t = tt == null ? G.t : tt, cE = cEff(t), Q = Math.max(0, (a - cE) / (2 * b)), P = a - b * Q;
+    return { Q: Q, P: P, profit: (P - cE) * Q, CS: 0.5 * (a - P) * Q, G: t * Q, e: Q > 0 ? (P / Q) / b : Infinity };
   }
-  function uniform() {
-    var best = { P: G.c, profit: 0 }, hi = Math.max(G.a1, G.a2);
-    for (var P = G.c; P <= hi; P += 0.1) {
-      var Q = Math.max(0, (G.a1 - P) / G.b1) + Math.max(0, (G.a2 - P) / G.b2), pr = (P - G.c) * Q;
+  function uniform(tt) {
+    var t = tt == null ? G.t : tt, cE = cEff(t), best = { P: cE, profit: 0 }, hi = Math.max(G.a1, G.a2);
+    for (var P = cE; P <= hi; P += 0.1) {
+      var Q = Math.max(0, (G.a1 - P) / G.b1) + Math.max(0, (G.a2 - P) / G.b2), pr = (P - cE) * Q;
       if (pr > best.profit) best = { P: P, profit: pr };
     }
     var q1 = Math.max(0, (G.a1 - best.P) / G.b1), q2 = Math.max(0, (G.a2 - best.P) / G.b2);
     best.CS = 0.5 * (G.a1 - best.P) * q1 + 0.5 * (G.a2 - best.P) * q2;
+    best.G = t * (q1 + q2);
     return best;
   }
   function drawGroup(c, a, b, o, uni, which) {
-    var XM2 = 120;
-    c.rect(0, G.c, o.Q, o.P, 'supply');
+    var XM2 = 120, cE = cEff(), taxed = Math.abs(G.t) > 0.05;
+    c.rect(0, cE, o.Q, o.P, 'supply');
+    if (taxed) c.rect(0, Math.min(G.c, cE), o.Q, Math.max(G.c, cE), 'gold');
     c.line(0, a, a / (2 * b), 0, 'mr');
     c.line(0, a, XM2, a - b * XM2, 'demand', { drag: 'D' });
-    c.line(0, G.c, XM2, G.c, 'mc');
+    if (taxed) c.line(0, G.c, XM2, G.c, 'ghost');
+    c.line(0, cE, XM2, cE, 'mc');
+    if (taxed) c.text(XM2 - 2, cE, G.t > 0 ? 'MC + tax' : 'MC − subsidy', 'soft', { anchor: 'end', dy: 16 });
     c.line(0, uni.P, XM2, uni.P, 'ink dash thin');
     c.text(XM2 - 2, uni.P, 'Single price $' + f1(uni.P), 'soft', { anchor: 'end', dy: -7 });
     c.dot(o.Q, o.P, 'ink', 6.5);
     c.drop(o.Q, o.P, 'Q=' + f1(o.Q), 'P=$' + f1(o.P));
-    c.text(o.Q / 2, (o.P + G.c) / 2, 'Profit', 'big');
+    c.text(o.Q / 2, (o.P + cE) / 2, 'Profit', 'big');
+    if (taxed && Math.abs(cE - G.c) > 9 && o.Q > 10) c.text(o.Q / 2, (G.c + cE) / 2, G.t > 0 ? 'Tax' : 'Subsidy', 'soft');
     var qh = clamp(0.25 * a / b, 6, 100); c.handle('D' + which, qh, a - b * qh);
   }
   b1.render = function (c) { drawGroup(c, G.a1, G.b1, groupOut(G.a1, G.b1), uniform(), 1); summaryB(); };
   b2.render = function (c) { drawGroup(c, G.a2, G.b2, groupOut(G.a2, G.b2), uniform(), 2); };
   function summaryB() {
     var o1 = groupOut(G.a1, G.b1), o2 = groupOut(G.a2, G.b2), u = uniform(), pd = o1.profit + o2.profit;
-    var tsD = pd + o1.CS + o2.CS, tsU = u.profit + u.CS;
-    TR.stats('#stats-b', [
+    var t = G.t, taxed = Math.abs(t) > 0.05, gD = o1.G + o2.G;
+    var tsD = pd + o1.CS + o2.CS + gD, tsU = u.profit + u.CS + u.G;        // total surplus includes the government's share
+    var rowsB = [
       ['Price group 1 / 2', money(o1.P, 1) + ' / ' + money(o2.P, 1), 'key'],
-      ['|ε| at price 1 / 2', f2(o1.e) + ' / ' + f2(o2.e)],
-      ['Profit — two prices', money(pd)], ['Profit — one price', money(u.profit)],
+      ['|ε| at price 1 / 2', f2(o1.e) + ' / ' + f2(o2.e)]];
+    if (taxed) rowsB.push(['Firm keeps (P − tax) 1 / 2', money(o1.P - t, 1) + ' / ' + money(o2.P - t, 1)], [t > 0 ? 'Tax revenue two / one price' : 'Subsidy cost two / one price', money(Math.abs(gD)) + ' / ' + money(Math.abs(u.G))]);
+    rowsB.push(['Profit — two prices', money(pd)], ['Profit — one price', money(u.profit)],
       ['Gain from discriminating', money(pd - u.profit), pd - u.profit > 0.5 ? 'good' : ''],
-      ['Total surplus two / one', money(tsD) + ' / ' + money(tsU)]
-    ]);
+      ['Total surplus two / one', money(tsD) + ' / ' + money(tsU)]);
+    TR.stats('#stats-b', rowsB);
     var hi = o1.P > o2.P ? 1 : 2, lo = 3 - hi, gap = Math.abs(o1.P - o2.P);
     var msg = gap < 0.5 ? 'The two groups have the same demand, so the profit-maximising prices coincide — <b>no gain</b> from discriminating.'
       : 'Group ' + hi + ' pays <b>' + money(Math.max(o1.P, o2.P), 1) + '</b> and group ' + lo + ' pays <b>' + money(Math.min(o1.P, o2.P), 1) + '</b>. Group ' + hi + ' has the <b>less elastic</b> demand (|ε| ' + f2(hi === 1 ? o1.e : o2.e) + ' vs ' + f2(hi === 1 ? o2.e : o1.e) + '), so it bears the higher price. Profit rises by ' + money(pd - u.profit) + ' versus a single price of ' + money(u.P, 1) + '.';
+    if (taxed) {          // pass-through of the tax into each group's price (compare with no tax)
+      var n1 = groupOut(G.a1, G.b1, 0), n2 = groupOut(G.a2, G.b2, 0), pc = function (x) { return Math.round(100 * x / t) + '%'; };
+      msg += ' <b>' + (t > 0 ? 'Tax' : 'Subsidy') + ' pass-through:</b> group 1’s price changes by ' + money(o1.P - n1.P, 1) + ' (' + pc(o1.P - n1.P) + ' of the ' + (t > 0 ? 'tax' : 'subsidy') + ') and group 2’s by ' + money(o2.P - n2.P, 1) + ' (' + pc(o2.P - n2.P) + '). With linear demand the firm passes on about half to <i>each</i> group, so the price gap between the groups barely changes, and the government ' + (t > 0 ? 'collects ' : 'pays ') + money(Math.abs(gD)) + ' when the firm discriminates.';
+    }
     TR.message('#msg-b', msg);
   }
   function drawB() { b1.draw(); b2.draw(); }
   b1.onDragStart = function () { snapB = { a: G.a1 }; };
   b2.onDragStart = function () { snapB = { a: G.a2 }; };
-  b1.onDrag = function (id, x, y, s) { G.a1 = clamp(snapB.a + (y - s.y) + G.b1 * (x - s.x), G.c + 10, 120); drawB(); };
-  b2.onDrag = function (id, x, y, s) { G.a2 = clamp(snapB.a + (y - s.y) + G.b2 * (x - s.x), G.c + 10, 120); drawB(); };
+  b1.onDrag = function (id, x, y, s) { G.a1 = clamp(snapB.a + (y - s.y) + G.b1 * (x - s.x), cEff() + 10, 120); drawB(); };
+  b2.onDrag = function (id, x, y, s) { G.a2 = clamp(snapB.a + (y - s.y) + G.b2 * (x - s.x), cEff() + 10, 120); drawB(); };
   var ctlB = document.querySelector('#ctl-b');
   var sb1 = TR.slider(ctlB, { label: 'Group 1 steepness (students)', min: 0.6, max: 2, step: 0.1, value: G.b1, fmt: f1, hint: 'Flatter = more price-sensitive.', onInput: function (v) { G.b1 = v; drawB(); } });
   var sb2 = TR.slider(ctlB, { label: 'Group 2 steepness (adults)', min: 0.6, max: 2, step: 0.1, value: G.b2, fmt: f1, onInput: function (v) { G.b2 = v; drawB(); } });
-  var sbc = TR.slider(ctlB, { label: 'Marginal cost', min: 0, max: 50, step: 1, value: G.c, fmt: money, onInput: function (v) { G.c = v; G.a1 = Math.max(G.a1, v + 10); G.a2 = Math.max(G.a2, v + 10); drawB(); } });
+  var sbc = TR.slider(ctlB, { label: 'Marginal cost', min: 0, max: 50, step: 1, value: G.c, fmt: money, onInput: function (v) { G.c = v; G.a1 = Math.max(G.a1, cEff() + 10); G.a2 = Math.max(G.a2, cEff() + 10); drawB(); } });
+  var sbt = TR.slider(ctlB, { label: 'Per-unit tax (negative = subsidy)', min: -15, max: 40, step: 1, value: G.t, fmt: function (v) { return v < 0 ? 'Subsidy $' + Math.abs(v) : v === 0 ? 'None' : 'Tax $' + v; }, hint: 'Paid by the firm: raises (or lowers) its marginal cost by this amount in both groups.', onInput: function (v) { G.t = v; G.a1 = Math.max(G.a1, cEff() + 10); G.a2 = Math.max(G.a2, cEff() + 10); drawB(); } });
   TR.button(ctlB, 'Make demands identical', function () { G.a1 = G.a2; G.b1 = G.b2; sb1.set(G.b1); drawB(); });
   drawB();
 
