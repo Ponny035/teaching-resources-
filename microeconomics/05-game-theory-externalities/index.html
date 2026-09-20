@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 5 · Game Theory & Externalities</title>
+<meta name="description" content="Interactive payoff matrix solver (Nash equilibrium, dominant strategies), repeated prisoner's dilemma, and externalities with Pigouvian taxes and subsidies.">
+<link rel="stylesheet" href="../../assets/css/site.css">
+</head>
+<body>
+<header class="topbar"><div class="wrap">
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="../../">Teaching Resources</a><span aria-hidden="true">/</span><a href="../">Microeconomics</a><span aria-hidden="true">/</span><span>Session 5</span></nav>
+</div></header>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow">Microeconomics · Session 5</div>
+    <h1>Game Theory &amp; Externalities</h1>
+    <p class="lede">When your best move depends on what someone else does, you’re in a game. And when your choices hurt (or help) people who aren’t part of the deal, markets get the quantity wrong. Both are about <i>interdependence</i> — and both can be fixed by changing incentives.</p>
+    <ul class="chips"><li>Strategic decision-making</li><li>Payoff matrix</li><li>Dominant strategy</li><li>Nash equilibrium</li><li>Prisoner’s dilemma</li><li>Collusion</li><li>Externalities</li><li>Private vs. social cost</li><li>Pigouvian taxes &amp; subsidies</li></ul>
+  </section>
+
+  <!-- ============ 5A ============ -->
+  <section class="lab" id="lab-a">
+    <div class="lab-head">
+      <h2>5A · Payoff matrix: find the Nash equilibrium</h2>
+      <p>Two players choose at the same time. Each cell shows <b style="color:var(--demand)">A’s payoff</b>, <b style="color:var(--supply)">B’s payoff</b>. A highlighted number means “this is the best reply to what the other player does”. A cell where <i>both</i> numbers are highlighted is a <b>Nash equilibrium</b>: no one wants to change alone. <b>Pick a classic game — or type your own payoffs.</b></p>
+    </div>
+    <div class="lab-body">
+      <div class="viz">
+        <div id="presets"></div>
+        <p id="story" class="msg" style="margin:10px 0"></p>
+        <div id="matrix-host"></div>
+      </div>
+      <div class="panel">
+        <h3>What the analysis says</h3>
+        <ul id="analysis" class="analysis"></ul>
+      </div>
+    </div>
+    <details class="try"><summary>Things to try</summary><ul>
+      <li><b>Prisoner’s dilemma:</b> both players have a <i>dominant strategy</i> (Confess), so the Nash equilibrium is (Confess, Confess) — yet both would be better off at (Silent, Silent). Individually rational, collectively bad.</li>
+      <li>Change the payoffs for the mutual-cooperation cell so it’s <i>lower</i> than the temptation payoff — see when cooperation stops being an equilibrium.</li>
+      <li><b>Stag hunt</b> and <b>Battle of the sexes</b> have <i>two</i> pure equilibria. Which one gets played? Game theory alone can’t say.</li>
+      <li><b>Matching pennies</b> has no pure equilibrium — only a <i>mixed</i> one where each player randomises.</li>
+    </ul></details>
+  </section>
+
+  <!-- ============ 5B ============ -->
+  <section class="lab" id="lab-b">
+    <div class="lab-head">
+      <h2>5B · Repeated play &amp; collusion: can cooperation survive?</h2>
+      <p>Cartels face a prisoner’s dilemma: each member gains by cheating on the deal (<b>Defect</b>), but if everyone cheats, all are worse off. When the game is <b>repeated</b>, the threat of future punishment can sustain <b>collusion</b> (<b>Cooperate</b>). Play 10 rounds against a computer opponent. Payoffs: both cooperate 3 each · both defect 1 each · you defect on a cooperator 5 vs 0.</p>
+    </div>
+    <div class="lab-body">
+      <div class="viz">
+        <div id="rounds-host" class="scroll-y"></div>
+      </div>
+      <div class="panel">
+        <div class="ctl"><label for="opp"><span>Opponent’s strategy</span></label>
+          <select id="opp" style="width:100%;font:inherit;padding:8px;border-radius:9px;border:1px solid var(--border);background:var(--surface2);color:var(--ink)">
+            <option value="tft">Tit-for-tat (copies your last move)</option>
+            <option value="coop">Always cooperate</option>
+            <option value="defect">Always defect</option>
+            <option value="grim">Grim trigger (never forgives a defection)</option>
+            <option value="random">Random 50/50</option>
+          </select></div>
+        <div id="btn-b" class="btns"></div>
+        <div id="stats-b"></div>
+        <div id="msg-b" class="msg"></div>
+      </div>
+    </div>
+    <details class="try"><summary>Things to try</summary><ul>
+      <li>Against tit-for-tat, cooperate every round: you both get 30. Try defecting once — you gain 2 that round but lose more later.</li>
+      <li>Against “always cooperate”, defecting every round is the best response — cooperation only survives if the opponent <i>punishes</i>.</li>
+      <li>Defect on the last round against tit-for-tat. Because the end is known, backward induction says <i>both</i> should defect in the last round — and then the one before, and so on. Real cartels survive because there is no known last round.</li>
+    </ul></details>
+  </section>
+
+  <!-- ============ 5C ============ -->
+  <section class="lab" id="lab-c">
+    <div class="lab-head">
+      <h2>5C · Externalities: when private and social costs differ</h2>
+      <p>An <b>externality</b> is a cost or benefit that lands on a third party. Producers weigh only <b>private</b> costs, so the market quantity is too high with a <i>negative</i> externality (pollution) and too low with a <i>positive</i> one (vaccination). The efficient quantity is where <b>marginal social benefit = marginal social cost</b>. A <b>Pigouvian tax</b> (or subsidy) equal to the external effect fixes it. <b>Drag the demand or supply curve</b>, set the externality and try a policy.</p>
+    </div>
+    <div class="lab-body">
+      <div class="viz">
+        <div id="legend-c"></div>
+        <div id="chart-c"></div>
+      </div>
+      <div class="panel">
+        <div id="ctl-c" class="panel"></div>
+        <div id="msg-c" class="msg"></div>
+        <div id="stats-c"></div>
+        <div id="btn-c" class="btns"></div>
+      </div>
+    </div>
+    <details class="try"><summary>Things to try</summary><ul>
+      <li>Negative externality: increase the external cost per unit. The <b>social cost</b> curve rises above the private supply, the efficient quantity falls, and the deadweight loss triangle grows.</li>
+      <li>Add a tax and slide it up from zero. Deadweight loss shrinks until the tax equals the external cost per unit — then <i>too much</i> tax makes it grow again.</li>
+      <li>Switch to a positive externality (e.g. vaccines) — the fix is a <b>subsidy</b>, not a tax.</li>
+      <li>Steeper supply (less responsive) means the same tax changes quantity less — but the <i>optimal</i> tax is still the external cost.</li>
+    </ul></details>
+  </section>
+
+  <section class="takeaways">
+    <h2>Key takeaways</h2>
+    <ul>
+      <li>A <b>dominant strategy</b> is best whatever the other player does. A <b>Nash equilibrium</b> is a set of strategies where nobody can gain by switching alone.</li>
+      <li>In a <b>prisoner’s dilemma</b> the Nash equilibrium is inefficient. Cartels are unstable because each member wants to cheat — unless repeated interaction makes punishment credible.</li>
+      <li><b>Externality</b> = a cost or benefit imposed on people outside the transaction. Markets ignore it: <code>MPC ≠ MSC</code> or <code>MPB ≠ MSB</code>.</li>
+      <li><b>Pigouvian tax</b> = marginal external cost; <b>subsidy</b> = marginal external benefit. It makes people face the true social price.</li>
+    </ul>
+  </section>
+
+  <nav class="pager" aria-label="Session navigation">
+    <a href="../04-market-power/">← Session 4</a>
+    <a href="../">All sessions</a>
+  </nav>
+</main>
+<footer class="site"><div class="wrap">Interactive teaching resources · Microeconomics</div></footer>
+
+<script src="../../assets/js/chart.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 1 · Economic Thinking & Consumer Choice</title>
+<meta name="description" content="Interactive budget line and indifference curve lab: scarcity, opportunity cost, marginal thinking, income & substitution effects.">
+<link rel="stylesheet" href="../../assets/css/site.css">
+</head>
+<body>
+<header class="topbar"><div class="wrap">
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="../../">Teaching Resources</a><span aria-hidden="true">/</span><a href="../">Microeconomics</a><span aria-hidden="true">/</span><span>Session 1</span></nav>
+</div></header>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow">Microeconomics · Session 1</div>
+    <h1>Economic Thinking &amp; Consumer Choice</h1>
+    <p class="lede">Every choice is a trade-off. This session builds the one picture that the rest of microeconomics stands on: what you <em>can</em> afford (the budget line) versus what you <em>want</em> (indifference curves), and where the two meet.</p>
+    <ul class="chips"><li>Scarcity</li><li>Opportunity cost</li><li>Marginal thinking</li><li>Preferences &amp; utility</li><li>Budget constraint</li><li>Indifference curves</li><li>Income &amp; substitution effects</li></ul>
+  </section>
+
+  <!-- ============ 1A ============ -->
+  <section class="lab" id="lab-a">
+    <div class="lab-head">
+      <h2>1A · Budget line, indifference curve &amp; the best bundle</h2>
+      <p><b>Scarcity</b> means your income is limited, so getting more of one good means getting less of another. The slope of the budget line <i>is</i> the <b>opportunity cost</b>. Your tastes are drawn as an <b>indifference curve</b> — every bundle on it makes you equally happy. <b>Drag the white dot</b> to choose a bundle.</p>
+    </div>
+    <div class="lab-body">
+      <div class="viz">
+        <div id="legend-a"></div>
+        <div id="chart-a"></div>
+      </div>
+      <div class="panel">
+        <div id="ctl-a" class="panel"></div>
+        <div id="msg-a" class="msg"></div>
+        <div id="stats-a"></div>
+        <div id="btn-a" class="btns"></div>
+      </div>
+    </div>
+    <details class="try"><summary>Things to try</summary><ul>
+      <li>Drag the dot to a point <em>inside</em> the shaded triangle. Is there always a better bundle? (More is better, so yes — move to the line.)</li>
+      <li>Drag it slowly along the budget line. Watch “utility per $” for each good — the highest utility happens where they’re equal. That’s <b>marginal thinking</b>.</li>
+      <li>Raise the price of pizza. The line pivots — the opportunity cost of pizza (in movies) goes up.</li>
+      <li>Change “taste for pizza”. The best bundle moves along the line towards the good you like more.</li>
+    </ul></details>
+  </section>
+
+  <!-- ============ 1B ============ -->
+  <section class="lab" id="lab-b">
+    <div class="lab-head">
+      <h2>1B · Price changes &amp; taxes: income effect vs. substitution effect</h2>
+      <p>A price change makes you buy differently for <i>two different reasons</i>. (1) <b>Substitution effect</b>: the good is now cheap or dear <i>relative</i> to others, so you swap. (2) <b>Income effect</b>: the same money now buys more or less, so you’re effectively richer or poorer. Economists split the move A → B via an in-between bundle C on the <i>original</i> indifference curve. Switch to <b>Per-unit tax / subsidy</b> to see the same idea with a government: the tax raises the price, the government collects revenue, and part of your loss is <b>deadweight loss</b>.</p>
+    </div>
+    <div class="lab-body">
+      <div class="viz">
+        <div id="legend-b"></div>
+        <div id="chart-b"></div>
+      </div>
+      <div class="panel">
+        <div id="ctl-b" class="panel"></div>
+        <div id="msg-b" class="msg"></div>
+        <div id="stats-b"></div>
+      </div>
+    </div>
+    <details class="try"><summary>Things to try</summary><ul>
+      <li>Slide the new price down from $6 to $3. A→C is the substitution effect (moving <i>along</i> the original curve to the new price ratio). C→B is the income effect (moving to a higher curve).</li>
+      <li>Now raise the price above $6 — both effects reverse.</li>
+      <li>Switch to <b>Per-unit tax</b> and slide it up. Your loss splits into what the government collects (a transfer) and the deadweight loss (waste). Try “Rebates it lump-sum”: B′ lands on the <i>old</i> budget line — almost only the substitution effect remains, and you’re still worse off than at A.</li>
+      <li>Slide the tax below zero to make it a <b>subsidy</b>: you gain, taxpayers pay more than you gain, and the gap is deadweight loss.</li>
+      <li>Raise “taste for pizza” (pizza becomes a bigger share of your budget). The income effect grows — a price cut matters more for a good you spend a lot on. When pizza is a small part of the budget, most of the response is substitution.</li>
+    </ul></details>
+  </section>
+
+  <section class="takeaways">
+    <h2>Key takeaways</h2>
+    <ul>
+      <li><b>Opportunity cost</b> = what you give up. On the budget line it equals the price ratio, <code>Px / Py</code>.</li>
+      <li>At the best bundle the indifference curve just touches the budget line: <code>MRS = Px / Py</code>, or equivalently <code>MUx / Px = MUy / Py</code> (equal “bang per buck”).</li>
+      <li>If <code>MRS &gt; Px/Py</code> you value X more than the market asks — buy more X, less Y. Reverse if less.</li>
+      <li>A price change = <b>substitution effect</b> (relative prices) + <b>income effect</b> (purchasing power).</li>
+      <li>A per-unit tax works the same way: what consumers lose splits into <b>tax revenue</b> (a transfer to the government) and <b>deadweight loss</b> (the substitution effect makes people give up trades that were worth it).</li>
+    </ul>
+  </section>
+
+  <nav class="pager" aria-label="Session navigation">
+    <a href="../">← All sessions</a>
+    <a href="../02-demand-supply/">Session 2: Demand &amp; Supply →</a>
+  </nav>
+</main>
+<footer class="site"><div class="wrap">Interactive teaching resources · Microeconomics</div></footer>
+
+<script src="../../assets/js/chart.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

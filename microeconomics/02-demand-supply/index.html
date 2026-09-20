@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 2 · Demand, Supply, Equilibrium & Elasticity</title>
+<meta name="description" content="Drag demand and supply curves, see consumer and producer surplus, deadweight loss from price controls and taxes, and elasticity.">
+<link rel="stylesheet" href="../../assets/css/site.css">
+</head>
+<body>
+<header class="topbar"><div class="wrap">
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="../../">Teaching Resources</a><span aria-hidden="true">/</span><a href="../">Microeconomics</a><span aria-hidden="true">/</span><span>Session 2</span></nav>
+</div></header>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow">Microeconomics · Session 2</div>
+    <h1>Demand, Supply, Equilibrium &amp; Elasticity</h1>
+    <p class="lede">Markets bring buyers and sellers together. Here you build the curves from individual willingness-to-pay, then drag them around to see shifts, shortages, surplus, and who wins and loses from a price control or a tax.</p>
+    <ul class="chips"><li>Demand &amp; supply</li><li>Shifts vs. movements</li><li>Equilibrium</li><li>Shortage &amp; surplus</li><li>Consumer &amp; producer surplus</li><li>Deadweight loss</li><li>Taxes &amp; subsidies</li><li>Elasticity</li></ul>
+  </section>
+
+  <!-- ============ 2A ============ -->
+  <section class="lab" id="lab-a">
+    <div class="lab-head">
+      <h2>2A · Where the curves come from: willingness to pay</h2>
+      <p>Each <b style="color:var(--demand)">blue bar</b> is one buyer’s <b>willingness to pay (WTP)</b> — the most they’d pay. Each <b style="color:var(--supply)">orange bar</b> is one seller’s minimum acceptable price (their cost). Line them up in order and you get the demand and supply <i>staircases</i>. <b>Drag any bar top</b> and <b>drag the price line</b>.</p>
+    </div>
+    <div class="lab-body">
+      <div class="viz">
+        <div id="legend-a"></div>
+        <div id="chart-a"></div>
+      </div>
+      <div class="panel">
+        <div id="ctl-a" class="panel"></div>
+        <div id="msg-a" class="msg"></div>
+        <div id="stats-a"></div>
+        <div id="btn-a" class="btns"></div>
+      </div>
+    </div>
+    <details class="try"><summary>Things to try</summary><ul>
+      <li>Set the price very high. Nobody wants to buy — a <b>surplus</b> of sellers. Set it very low: a <b>shortage</b>. Notice how few trades happen either way.</li>
+      <li>Click “Go to equilibrium price”. Total surplus is at its maximum and deadweight loss is zero.</li>
+      <li>Raise buyer 4’s WTP above buyer 2’s? You can’t — bars stay sorted, just like a real demand curve slopes down.</li>
+      <li><b>Consumer surplus</b> = WTP − price paid (dark blue). <b>Producer surplus</b> = price received − cost (dark orange).</li>
+    </ul></details>
+  </section>
+
+  <!-- ============ 2B ============ -->
+  <section class="lab" id="lab-b">
+    <div class="lab-head">
+      <h2>2B · The market: shifts, equilibrium, surplus &amp; deadweight loss</h2>
+      <p><b>Drag the demand or supply curve</b> to shift it (or use the sliders to change how steep it is). The dashed grey lines are your starting point, so you can see what changed. Then add a <b>price ceiling, price floor, tax or subsidy</b> and watch the surplus get shared out between consumers, producers, the <b>government</b> and <b>deadweight loss</b>.</p>
+    </div>
+    <div class="lab-body">
+      <div class="viz">
+        <div id="legend-b"></div>
+        <div id="chart-b"></div>
+      </div>
+      <div class="panel">
+        <div id="ctl-b" class="panel"></div>
+        <div id="msg-b" class="msg"></div>
+        <div id="stats-b"></div>
+        <div id="split-b"></div>
+        <div id="btn-b" class="btns"></div>
+      </div>
+    </div>
+    <details class="try"><summary>Things to try</summary><ul>
+      <li><b>Shift vs. movement.</b> Drag demand to the right: the <i>curve</i> shifts, and the market moves <i>along</i> the supply curve to a new equilibrium (price ↑, quantity ↑).</li>
+      <li>Drag supply to the left (e.g. a bad harvest): price ↑, quantity ↓ — the opposite quantity effect.</li>
+      <li>Shift <i>both</i> to the right. Quantity clearly rises — but price? It depends on which shift is bigger.</li>
+      <li>Price ceiling below equilibrium → a <b>shortage</b>, and the red DWL triangle shows trades that would have benefited both sides but no longer happen.</li>
+      <li>Tax: make demand steep (inelastic) and see who bears more of the burden — the side with the steeper curve. Watch the bar: part of the surplus moves to the <b>government</b>, part disappears as <b>DWL</b>.</li>
+      <li>Subsidy: buyers pay less and sellers get more, so both gain — but taxpayers foot a bigger bill than the gain. That gap is the DWL of over-production.</li>
+    </ul></details>
+  </section>
+
+  <!-- ============ 2C ============ -->
+  <section class="lab" id="lab-t">
+    <div class="lab-head">
+      <h2>2C · Taxes &amp; subsidies: who bears them, and who gets the surplus?</h2>
+      <p>A <b>tax</b> drives a wedge between what buyers pay and what sellers keep. Part of the old surplus becomes <b>government revenue</b>, part is lost as <b>deadweight loss</b>. A <b>subsidy</b> works the other way: buyers and sellers both gain, but taxpayers pay more than they gain. How the burden splits depends on <b>substitution</b>: the side that can more easily switch away (flatter curve) bears less. <b>Slide the tax</b> (left of zero = subsidy) and change how many substitutes each side has.</p>
+    </div>
+    <div class="lab-body">
+      <div class="viz">
+        <div id="legend-t"></div>
+        <div id="chart-t"></div>
+      </div>
+      <div class="panel">
+        <div id="ctl-t" class="panel"></div>
+        <div id="msg-t" class="msg"></div>
+        <div id="stats-t"></div>
+        <div id="split-t"></div>
+        <div id="btn-t" class="btns"></div>
+      </div>
+    </div>
+    <details class="try"><summary>Things to try</summary><ul>
+      <li>Slide the tax up from zero and watch the bar: the government’s share grows, but so does deadweight loss — <b>double the tax and DWL roughly quadruples</b>.</li>
+      <li>Give buyers <b>many substitutes</b> (flat demand). Buyers just switch away, so <i>sellers</i> bear most of the tax and quantity falls a lot. With <b>few substitutes</b>, buyers bear most of it and the quantity barely moves — which is why governments tax inelastic goods (fuel, tobacco).</li>
+      <li>Set buyers’ and sellers’ substitutes equal: the burden splits 50/50 no matter who the law says pays.</li>
+      <li>Drag the slider below zero for a <b>subsidy</b>. Consumers and producers gain, but taxpayers pay more — the gap is deadweight loss from over-producing.</li>
+    </ul></details>
+  </section>
+
+  <!-- ============ 2D ============ -->
+  <section class="lab" id="lab-c">
+    <div class="lab-head">
+      <h2>2D · Elasticity: how much does quantity react to price?</h2>
+      <p>Elasticity = % change in quantity ÷ % change in price. On a straight-line demand curve it changes along the line: <b>elastic</b> (|ε| &gt; 1) at high prices, <b>inelastic</b> (|ε| &lt; 1) at low prices. That decides whether cutting price raises or lowers <b>total revenue</b>. <b>Drag the dot along the demand curve.</b></p>
+    </div>
+    <div class="lab-body stack">
+      <div class="duo">
+        <div class="viz"><h3>Demand &amp; revenue rectangle (P × Q)</h3><div id="chart-c1"></div></div>
+        <div class="viz"><h3>Total revenue as quantity changes</h3><div id="chart-c2"></div></div>
+      </div>
+      <div class="panel row">
+        <div id="ctl-c" class="panel"></div>
+        <div id="stats-c"></div>
+        <div id="msg-c" class="msg"></div>
+      </div>
+    </div>
+    <details class="try"><summary>Things to try</summary><ul>
+      <li>Start at the top of the demand curve and slide down. Revenue rises until |ε| = 1 (the midpoint), then falls.</li>
+      <li>Make demand flatter with the slider. The same price point now has a bigger |ε| — buyers are more responsive.</li>
+      <li>Why do firms selling necessities (insulin) or with few substitutes have pricing power? Because their demand is inelastic.</li>
+    </ul></details>
+  </section>
+
+  <section class="lab">
+    <div class="lab-head"><h2>Cheat sheet: what shifts the curves?</h2></div>
+    <div class="two-col">
+      <div>
+        <h3 style="color:var(--demand)">Demand shifters</h3>
+        <ul><li>Income (normal vs. inferior goods)</li><li>Prices of substitutes &amp; complements</li><li>Tastes &amp; trends</li><li>Expectations about future prices</li><li>Number of buyers</li></ul>
+        <p class="hint">A change in the good’s <i>own price</i> is a <b>movement along</b> the curve, not a shift.</p>
+      </div>
+      <div>
+        <h3 style="color:var(--supply)">Supply shifters</h3>
+        <ul><li>Input costs (wages, materials)</li><li>Technology</li><li>Taxes &amp; subsidies</li><li>Expectations</li><li>Number of sellers</li></ul>
+        <p class="hint">What makes demand more elastic? More substitutes, luxuries, bigger share of budget, longer time horizon.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="takeaways">
+    <h2>Key takeaways</h2>
+    <ul>
+      <li>Demand = buyers’ WTP; supply = sellers’ costs. The market <b>equilibrium</b> is where the two cross: quantity demanded = quantity supplied.</li>
+      <li>Above equilibrium price → <b>surplus</b>; below → <b>shortage</b>. Prices move to clear them.</li>
+      <li><b>CS</b> is the area between the demand curve and price; <b>PS</b> the area between price and the supply curve. Equilibrium <b>maximises total surplus</b>.</li>
+      <li>Anything that stops trades that benefit both sides (ceiling, floor, tax) creates <b>deadweight loss</b>. A tax moves part of the surplus to the <b>government</b>; a subsidy “adds” surplus for buyers and sellers but costs taxpayers more than it adds.</li>
+      <li>The more elastic side of the market bears <i>less</i> of a tax; elasticity also tells you if a price cut raises revenue.</li>
+    </ul>
+  </section>
+
+  <nav class="pager" aria-label="Session navigation">
+    <a href="../01-consumer-choice/">← Session 1</a>
+    <a href="../03-firms-costs/">Session 3: Firms &amp; Costs →</a>
+  </nav>
+</main>
+<footer class="site"><div class="wrap">Interactive teaching resources · Microeconomics</div></footer>
+
+<script src="../../assets/js/chart.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

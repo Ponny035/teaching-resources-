@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 3 · Firms, Costs & Perfect Competition</title>
+<meta name="description" content="Interactive cost curves, MR = MC profit maximisation, shutdown rule and long-run entry in perfect competition.">
+<link rel="stylesheet" href="../../assets/css/site.css">
+</head>
+<body>
+<header class="topbar"><div class="wrap">
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="../../">Teaching Resources</a><span aria-hidden="true">/</span><a href="../">Microeconomics</a><span aria-hidden="true">/</span><span>Session 3</span></nav>
+</div></header>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow">Microeconomics · Session 3</div>
+    <h1>Firms, Costs &amp; Perfect Competition</h1>
+    <p class="lede">Session 2 treated supply as a given curve. Now we look inside the firm: what does it cost to produce, how much should it produce, and why does the marginal cost curve <i>become</i> the supply curve?</p>
+    <ul class="chips"><li>Production</li><li>Fixed &amp; variable costs</li><li>Average &amp; marginal costs</li><li>Revenue &amp; marginal revenue</li><li>Profit</li><li>MR = MC</li><li>Price-taking behaviour</li></ul>
+  </section>
+
+  <!-- ============ 3A ============ -->
+  <section class="lab" id="lab-a">
+    <div class="lab-head">
+      <h2>3A · One price-taking firm: cost curves and the profit-maximising output</h2>
+      <p>In perfect competition the firm is a <b>price taker</b>: it can sell as much as it likes at the market price, so <b>marginal revenue (MR) = price</b>. It keeps producing while the <i>next</i> unit adds more revenue than cost, and stops where <b>MR = MC</b>. <b>Drag the price line</b> up and down. The shaded box is profit (green) or loss (red).</p>
+    </div>
+    <div class="lab-body stack">
+      <div id="legend-a"></div>
+      <div class="duo">
+        <div class="viz"><h3>Per-unit view: costs &amp; price</h3><div id="chart-a1"></div></div>
+        <div class="viz"><h3>Total view: revenue vs. cost</h3><div id="chart-a2"></div></div>
+      </div>
+      <div class="panel row">
+        <div id="ctl-a" class="panel"></div>
+        <div id="stats-a"></div>
+        <div id="msg-a" class="msg"></div>
+      </div>
+    </div>
+    <details class="try"><summary>Things to try</summary><ul>
+      <li>Raise the price and see the output <b>slide up along the MC curve</b>. That’s why MC (above the shutdown point) <i>is</i> the firm’s supply curve.</li>
+      <li>Drop the price below the ATC minimum: the firm makes a loss but should <i>still</i> produce if price ≥ AVC (it covers some fixed costs). Below AVC, shut down and lose only the fixed cost.</li>
+      <li>In the total view, the profit gap is largest where the dashed line (slope = MC) is parallel to the revenue line (slope = P). That’s the same MR = MC rule seen another way.</li>
+      <li>Raise fixed cost: ATC moves up but MC doesn’t — so the <i>output</i> decision is unchanged; only profit falls. (Fixed costs are sunk.)</li>
+    </ul></details>
+  </section>
+
+  <!-- ============ 3B ============ -->
+  <section class="lab" id="lab-b">
+    <div class="lab-head">
+      <h2>3B · The whole market: how competition erodes profit</h2>
+      <p>Market supply is the sum of all firms’ MC curves (above shutdown). If firms make <b>profit</b>, others <b>enter</b>: supply shifts right, price falls. If they make <b>losses</b>, firms <b>exit</b>. It stops at <b>zero economic profit</b> where <b>P = minimum ATC</b>. Try a demand boom, then press <i>Auto-run</i>.</p>
+    </div>
+    <div class="lab-body stack">
+      <div id="legend-b"></div>
+      <div class="duo">
+        <div class="viz"><h3>The market</h3><div id="chart-b1"></div></div>
+        <div class="viz"><h3>A typical firm</h3><div id="chart-b2"></div></div>
+      </div>
+      <div class="panel row">
+        <div id="ctl-b" class="panel"></div>
+        <div id="stats-b"></div>
+        <div id="msg-b" class="msg"></div>
+      </div>
+      <div id="btn-b" class="btns"></div>
+    </div>
+    <details class="try"><summary>Things to try</summary><ul>
+      <li>Set very few firms: the price is high and each firm earns a fat profit. Press “Auto-run” and watch entry push price down.</li>
+      <li>Press “Reset”, then increase market demand. Short-run profits appear → entry → in the long run price returns to minimum ATC, but with <i>more firms and more output</i>.</li>
+      <li>Set too many firms and watch exit happen.</li>
+    </ul></details>
+  </section>
+
+  <section class="takeaways">
+    <h2>Key takeaways</h2>
+    <ul>
+      <li><b>Fixed costs</b> don’t change with output; <b>variable costs</b> do. <code>ATC = AFC + AVC</code>. MC cuts AVC and ATC at their minimums.</li>
+      <li>Profit-maximising rule for any firm: produce where <code>MR = MC</code> (and only if <code>P ≥ AVC</code>).</li>
+      <li>For a price-taker <code>MR = P</code>, so <code>P = MC</code>. The firm’s supply curve is MC above min AVC.</li>
+      <li>Short-run profit invites entry; in the long run <code>P = min ATC</code> and economic profit is zero. <i>Zero economic profit</i> still means normal returns to the owners.</li>
+    </ul>
+  </section>
+
+  <nav class="pager" aria-label="Session navigation">
+    <a href="../02-demand-supply/">← Session 2</a>
+    <a href="../04-market-power/">Session 4: Market Power →</a>
+  </nav>
+</main>
+<footer class="site"><div class="wrap">Interactive teaching resources · Microeconomics</div></footer>
+
+<script src="../../assets/js/chart.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
