@@ -39,6 +39,7 @@
       </div>
     </div>
     <details class="try"><summary>Things to try</summary><ul>
+      <li>Too many lines? Switch <b>Detail level</b> to <b>Simple: ATC only</b>. It hides AVC, AFC and the fixed/variable cost sliders so you can focus on ATC, MC and the price line.</li>
       <li>Raise the price and see the output <b>slide up along the MC curve</b>. That’s why MC (above the shutdown point) <i>is</i> the firm’s supply curve.</li>
       <li>Drop the price below the ATC minimum: the firm makes a loss but should <i>still</i> produce if price ≥ AVC (it covers some fixed costs). Below AVC, shut down and lose only the fixed cost.</li>
       <li>In the total view, the profit gap is largest where the dashed line (slope = MC) is parallel to the revenue line (slope = P). That’s the same MR = MC rule seen another way.</li>
@@ -50,7 +51,7 @@
   <section class="lab" id="lab-b">
     <div class="lab-head">
       <h2>3B · The whole market: how competition erodes profit</h2>
-      <p>Market supply is the sum of all firms’ MC curves (above shutdown). If firms make <b>profit</b>, others <b>enter</b>: supply shifts right, price falls. If they make <b>losses</b>, firms <b>exit</b>. It stops at <b>zero economic profit</b> where <b>P = minimum ATC</b>. Try a demand boom, then press <i>Auto-run</i>.</p>
+      <p>Market supply is the sum of all firms’ MC curves (above shutdown). If firms make <b>profit</b>, others <b>enter</b>: supply shifts right, price falls. If they make <b>losses</b>, firms <b>exit</b>. It stops at <b>zero economic profit</b> where <b>P = minimum ATC</b>. Try a demand boom, then press <i>Auto-run</i>. You can also add a <b>per-unit tax or subsidy</b> on the firms.</p>
     </div>
     <div class="lab-body stack">
       <div id="legend-b"></div>
@@ -69,12 +70,40 @@
       <li>Set very few firms: the price is high and each firm earns a fat profit. Press “Auto-run” and watch entry push price down.</li>
       <li>Press “Reset”, then increase market demand. Short-run profits appear → entry → in the long run price returns to minimum ATC, but with <i>more firms and more output</i>.</li>
       <li>Set too many firms and watch exit happen.</li>
+      <li>Add a <b>per-unit tax</b> on firms. Supply shifts up by the tax: consumers pay more, firms keep less, and the government collects the gold box. Press “Auto-run”: in the long run entry and exit push what firms <i>receive</i> back to the minimum ATC, so consumers end up paying min ATC + tax — the whole tax is passed on.</li>
+    </ul></details>
+  </section>
+
+  <!-- ============ 3C ============ -->
+  <section class="lab" id="lab-c">
+    <div class="lab-head">
+      <h2>3C · Short run vs. long run: how does the price affect one firm?</h2>
+      <p>The <b>short run</b> firm is stuck with its plant, so it slides along its short-run curves (SRMC, SRATC). In the <b>long run</b> it can choose the best plant size for each output, so its cost curves are the flatter <b>LRAC</b> and <b>LRMC</b>, and each SRATC just touches LRAC at one point. Below, the <b>same market price</b> hits both firms <b>side by side</b>. <b>Drag the price line</b> in either chart.</p>
+    </div>
+    <div class="lab-body stack">
+      <div id="legend-c"></div>
+      <div class="duo">
+        <div class="viz"><h3>Short run: plant size fixed</h3><div id="chart-c1"></div></div>
+        <div class="viz"><h3>Long run: plant size and entry adjust</h3><div id="chart-c2"></div></div>
+      </div>
+      <div class="panel row">
+        <div id="ctl-c" class="panel"></div>
+        <div id="cmp-c"></div>
+        <div id="msg-c" class="msg"></div>
+      </div>
+    </div>
+    <details class="try"><summary>Things to try</summary><ul>
+      <li>Set the price above the dashed level ($9). Both firms earn profit, but in the long run <b>entry</b> pushes the price back down to the minimum of LRAC, where profit is zero.</li>
+      <li>Watch the <b>“Output gained if price +$1”</b> row: the long-run firm responds more, because its LRMC is flatter than its SRMC. That’s why <b>long-run supply is more elastic</b> than short-run supply.</li>
+      <li>In the long-run chart, the dashed violet curve is the SRATC of the plant the firm picks. It touches LRAC exactly at the chosen output — LRAC is the lower envelope of all the short-run curves.</li>
+      <li>Push the price below the dashed level: the short-run firm may keep producing (if P ≥ AVC), but in the long run it must <b>exit</b>.</li>
     </ul></details>
   </section>
 
   <section class="takeaways">
     <h2>Key takeaways</h2>
     <ul>
+      <li><b>Short run</b> = some inputs (plant) fixed; <b>long run</b> = everything can change, so LRAC and LRMC are flatter and long-run supply is more elastic.</li>
       <li><b>Fixed costs</b> don’t change with output; <b>variable costs</b> do. <code>ATC = AFC + AVC</code>. MC cuts AVC and ATC at their minimums.</li>
       <li>Profit-maximising rule for any firm: produce where <code>MR = MC</code> (and only if <code>P ≥ AVC</code>).</li>
       <li>For a price-taker <code>MR = P</code>, so <code>P = MC</code>. The firm’s supply curve is MC above min AVC.</li>

@@ -23,27 +23,30 @@
   <!-- ============ 4A ============ -->
   <section class="lab" id="lab-a">
     <div class="lab-head">
-      <h2>4A · One demand curve, five market structures</h2>
-      <p>A firm with market power faces the whole downward-sloping demand curve. To sell one more unit it must cut the price on <i>all</i> units, so <b>marginal revenue (MR) lies below demand</b>. It picks output where <b>MR = MC</b>, then charges what buyers will pay for that quantity. Choose a structure below; <b>drag the demand curve or the MC line</b>.</p>
+      <h2>4A · One demand curve, five market structures: short run vs. long run</h2>
+      <p>A firm with market power faces the whole downward-sloping demand curve. To sell one more unit it must cut the price on <i>all</i> units, so <b>marginal revenue (MR) lies below demand</b>. It picks output where <b>MR = MC</b>, then charges what buyers will pay. Choose a structure and compare the <b>short run</b> (left: capacity and number of firms fixed) with the <b>long run</b> (right: firms can enter, exit and adjust) <b>side by side</b>. <b>Drag the demand curve or the MC line</b> in either chart. Add a <b>per-unit tax or subsidy</b> to see who pays it under each structure.</p>
     </div>
-    <div class="lab-body">
-      <div class="viz">
-        <div id="legend-a"></div>
-        <div id="chart-a"></div>
+    <div class="lab-body stack">
+      <div id="legend-a"></div>
+      <div class="duo">
+        <div class="viz"><h3>Short run</h3><div id="chart-a"></div></div>
+        <div class="viz"><h3>Long run</h3><div id="chart-a2"></div></div>
       </div>
-      <div class="panel">
+      <div class="panel row">
         <div id="ctl-a" class="panel"></div>
+        <div id="cmp-a"></div>
         <div id="msg-a" class="msg"></div>
-        <div id="stats-a"></div>
-        <div id="btn-a" class="btns"></div>
       </div>
+      <div id="btn-a" class="btns"></div>
     </div>
     <details class="try"><summary>Things to try</summary><ul>
-      <li><b>Monopoly:</b> find the quantity where MR crosses MC, then go <i>up</i> to demand to read the price. Compare with perfect competition (P = MC). The red triangle is the deadweight loss.</li>
-      <li><b>Oligopoly (Cournot):</b> slide the number of firms from 1 to 10. Price falls from the monopoly price toward MC — more rivals, less market power.</li>
-      <li><b>Perfect price discrimination:</b> the monopolist charges each buyer their maximum WTP. Output is efficient (no DWL), but consumers get zero surplus — it’s all profit.</li>
-      <li><b>Monopolistic competition (long run):</b> profits attract new brands, shifting each firm’s demand left until it just touches ATC (zero profit). Price is still above MC.</li>
-      <li>Raise the marginal cost line. Monopoly price rises by <i>half</i> as much — why? (MR slopes twice as steeply as demand.)</li>
+      <li><b>Perfect competition:</b> demand starts with a boom. In the short run price jumps up the steep supply curve and firms earn profit (green box); in the long run entry pushes price back to LRAC and profit vanishes. Drag demand back to 100 and the two runs match.</li>
+      <li><b>Monopoly:</b> short run = long run. Barriers to entry let the profit last, and the red triangle (deadweight loss) never goes away.</li>
+      <li><b>Oligopoly (Cournot):</b> the short run has a fixed number of firms. In the long run entry changes the number of firms until profit per firm is ~0. Raise fixed cost F: fewer firms survive.</li>
+      <li><b>Monopolistic competition:</b> profit in the short run, but new brands shift each firm’s demand left in the long run until it just touches ATC (zero profit), with price still above MC.</li>
+      <li><b>Tax pass-through:</b> add a per-unit tax. A monopolist with linear demand raises price by only about <i>half</i> the tax; a competitive industry with free entry passes on <i>all</i> of it in the long run. The gold box is government revenue.</li>
+      <li><b>Perfect price discrimination:</b> output is efficient (no DWL) but consumers get zero surplus.</li>
+      <li>Raise the marginal cost line. The monopoly price rises by <i>half</i> as much — why? (MR slopes twice as steeply as demand.)</li>
     </ul></details>
   </section>
 
@@ -76,7 +79,7 @@
   <section class="lab" id="lab-c">
     <div class="lab-head">
       <h2>4C · Monopsony: market power on the buying side</h2>
-      <p>A <b>monopsony</b> is a single buyer — e.g. the only big employer in a town. To hire one more worker it must raise the wage for <i>everyone</i>, so the <b>marginal cost of labour (MCL)</b> lies above the supply curve. The firm hires where <b>MRP = MCL</b> but pays only what workers will accept, so <b>employment and wages are below the competitive level</b>. Add a minimum wage and see something surprising.</p>
+      <p>A <b>monopsony</b> is a single buyer — e.g. the only big employer in a town. To hire one more worker it must raise the wage for <i>everyone</i>, so the <b>marginal cost of labour (MCL)</b> lies above the supply curve. The firm hires where <b>MRP = MCL</b> but pays only what workers will accept, so <b>employment and wages are below the competitive level</b>. Add a minimum wage and see something surprising, or a <b>payroll tax / wage subsidy</b> to see who bears it.</p>
     </div>
     <div class="lab-body">
       <div class="viz">
@@ -92,6 +95,7 @@
     <details class="try"><summary>Things to try</summary><ul>
       <li>Switch between competitive and monopsony employers to see the drop in wage and employment.</li>
       <li>In monopsony, raise the minimum wage from $0. Between the monopsony wage and the competitive wage, <b>employment rises</b>.</li>
+      <li>Add a <b>payroll tax</b> per worker: the employer’s demand for labor shifts down by the tax, the wage falls and employment drops. The gold area is government revenue; workers bear the share the wage falls by.</li>
       <li>Push the minimum wage above the competitive wage — now employers cut jobs and unemployment appears, as in the standard competitive model.</li>
     </ul></details>
   </section>

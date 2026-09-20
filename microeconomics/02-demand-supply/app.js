@@ -184,6 +184,11 @@
       else {
         c.dot(r.Q, D(r.Q), 'demand', 5); c.dot(r.Q, S(r.Q), 'supply', 5);
         c.line(r.Q, D(r.Q), r.Q, 0, 'drop'); c.text(r.Q, 0, 'Q=' + f1(r.Q), 'soft', { dy: -7 });
+        if (mode === 'tax' || mode === 'subsidy') {          // new equilibrium: demand meets supply-after-policy
+          c.text(r.Qe, r.Pe, 'Original E* ' + money(r.Pe, 1), 'soft', { dx: mode === 'tax' ? 10 : -10, dy: mode === 'tax' ? -12 : 20, anchor: mode === 'tax' ? 'start' : 'end' });
+          c.dot(r.Q, r.Pc, 'ink', 6.5);
+          c.text(r.Q, r.Pc, 'New E* ' + money(r.Pc, 1), '', { anchor: 'start', dx: 10, dy: mode === 'tax' ? -10 : 18 });
+        }
       }
     }
 
@@ -285,6 +290,7 @@
      "Substitutes" sliders set steepness: b = 2.5 / k  (more substitutes → flatter curve).
      ===================================================================== */
   var T = { a: 90, kb: 2.5, c: 10, kd: 2.5, t: 20 }, snapT = null;
+  var PB = true;          // price breakdown: show what buyers pay vs what sellers receive
   var cT = TR.chart('#chart-t', { xmax: 120, ymax: 120, xstep: 20, ystep: 20, xlabel: 'Quantity', ylabel: 'Price ($)', yfmt: function (v) { return '$' + v; }, aspect: 0.82, maxH: 520 });
   TR.legend('#legend-t', [['demand', 'Demand'], ['supply', 'Supply'], ['supply dash', 'Supply after tax / subsidy'], ['box demand', 'Consumer surplus'], ['box supply', 'Producer surplus'], ['box gold', 'Tax revenue / subsidy cost'], ['box red', 'Deadweight loss']]);
   function tCurves() { return { a: T.a, b: 2.5 / T.kb, c: T.c, d: 2.5 / T.kd }; }
@@ -297,7 +303,13 @@
     if (a > cc) {
       c.poly([[0, a], [r.Q, D(r.Q)], [r.Q, r.Pc], [0, r.Pc]], 'demand');
       c.poly([[0, r.Ps], [r.Q, r.Ps], [r.Q, S(r.Q)], [0, cc]], 'supply');
-      if (v >= 0.05) c.rect(0, Math.min(r.Pc, r.Ps), r.Q, Math.max(r.Pc, r.Ps), 'gold');
+      if (v >= 0.05) {
+        var wlo = Math.min(r.Pc, r.Ps), whi = Math.max(r.Pc, r.Ps);
+        if (PB) {          // split the wedge at the original price: lower part / upper part belong to different sides
+          c.rect(0, wlo, r.Q, r.Pe, isTax ? 'supply strong' : 'demand strong');
+          c.rect(0, r.Pe, r.Q, whi, isTax ? 'demand strong' : 'supply strong');
+        } else c.rect(0, wlo, r.Q, whi, 'gold');
+      }
       if (Math.abs(r.Qe - r.Q) > 0.05) c.poly([[r.Q, S(r.Q)], [r.Q, D(r.Q)], [r.Qe, r.Pe]], 'red');
     }
     c.line(0, a, XM, D(XM), 'demand', { drag: 'D' });
@@ -311,16 +323,25 @@
     if (a > cc) {
       var q3 = r.Q * 0.3;
       if (r.Q > 8) {
-        c.text(q3, (r.Pc + D(q3)) / 2, 'CS', 'big');
-        c.text(q3, Math.max(cc, (r.Ps + S(q3)) / 2), 'PS', 'big');
+        c.text(q3, (Math.max(r.Pc, r.Ps) + D(q3)) / 2, 'CS', 'big');           // keep labels outside the tax / subsidy wedge
+        c.text(q3, Math.max(cc, (Math.min(r.Pc, r.Ps) + S(q3)) / 2), 'PS', 'big');
       }
-      if (v >= 0.05 && Math.abs(r.Pc - r.Ps) > 8) c.text(r.Q / 2, (r.Pc + r.Ps) / 2, isTax ? 'Tax revenue' : 'Subsidy cost', '');
+      if (!PB && v >= 0.05 && Math.abs(r.Pc - r.Ps) > 8) c.text(r.Q / 2, (r.Pc + r.Ps) / 2, isTax ? 'Tax revenue' : 'Subsidy cost', '');
+      if (PB && v >= 0.05) {
+        var top = Math.max(r.Pc, r.Ps), bot = Math.min(r.Pc, r.Ps), buyerTop = r.Pc >= r.Ps;
+        c.line(0, r.Pc, r.Q, r.Pc, 'demand dash thin'); c.line(0, r.Ps, r.Q, r.Ps, 'supply dash thin'); c.line(0, r.Pe, r.Q, r.Pe, 'ink dash thin');
+        var pm = function (v) { return '$' + TR.fmt(v); }, dd = function (v) { var d = v - r.Pe; return ' (' + (d >= 0 ? '+' : '−') + pm(Math.abs(d)) + ')'; };
+        c.text(0, r.Pc, 'Buyers pay ' + pm(r.Pc) + dd(r.Pc), '', { anchor: 'start', dx: 6, dy: buyerTop ? -7 : 16 });
+        c.text(0, r.Ps, 'Sellers get ' + pm(r.Ps) + dd(r.Ps), '', { anchor: 'start', dx: 6, dy: buyerTop ? 16 : -7 });
+      }
       if (r.DWL > 25) c.text(r.Q + (r.Qe - r.Q) * 0.4, (D(r.Q) + S(r.Q)) / 2, 'DWL', 'big', { dx: 2 });
       c.dot(r.Qe, r.Pe, 'hollow', 6);
-      c.text(r.Qe, r.Pe, 'No policy', 'soft', { dx: isTax ? 10 : -10, dy: isTax ? -12 : 20, anchor: isTax ? 'start' : 'end' });
+      c.text(r.Qe, r.Pe, 'Original E* ' + money(r.Pe, 1), 'soft', { dx: isTax ? 10 : -10, dy: isTax ? -12 : 20, anchor: isTax ? 'start' : 'end' });
       if (v >= 0.05) {
         c.dot(r.Q, D(r.Q), 'demand', 5); c.dot(r.Q, S(r.Q), 'supply', 5);
         c.line(r.Q, D(r.Q), r.Q, 0, 'drop'); c.text(r.Q, 0, 'Q=' + f1(r.Q), 'soft', { dy: -7 });
+        c.dot(r.Q, r.Pc, 'ink', 6.5);                      // new equilibrium E*: demand meets supply-after-tax/subsidy
+        c.text(r.Q, r.Pc, 'New E* ' + money(r.Pc, 1), '', { anchor: 'start', dx: 12, dy: isTax ? -22 : 20 });
       }
     }
     var qh = clamp(0.25 * a / b, 6, 100); c.handle('D', qh, D(qh));
@@ -328,7 +349,9 @@
 
     var buyer = isTax ? r.Pc - r.Pe : r.Pe - r.Pc, seller = isTax ? r.Pe - r.Ps : r.Ps - r.Pe;
     var bShare = v > 0.05 ? Math.round(100 * buyer / v) : 0;
-    var rows = [['Buyers pay', money(r.Pc, 1)], ['Sellers receive', money(r.Ps, 1)], ['Quantity traded', f1(r.Q) + ' (was ' + f1(r.Qe) + ')', 'key']];
+    var rows = [['Original E*', 'P ' + money(r.Pe, 1) + ' · Q ' + f1(r.Qe)]];
+    if (v >= 0.05) rows.push(['New E* (market price)', 'P ' + money(r.Pc, 1) + ' · Q ' + f1(r.Q), 'key']);
+    rows.push(['Buyers pay', money(r.Pc, 1)], ['Sellers receive', money(r.Ps, 1)]);
     if (v >= 0.05) rows.push([isTax ? 'Buyers bear' : 'Buyers gain', bShare + '% ($' + f1(buyer) + ')'], [isTax ? 'Sellers bear' : 'Sellers gain', (100 - bShare) + '% ($' + f1(seller) + ')'],
       [isTax ? 'Tax revenue' : 'Subsidy cost', money(Math.abs(r.G))]);
     rows.push(['Deadweight loss', money(r.DWL), r.DWL > 0.5 ? 'bad' : 'good']);
@@ -340,16 +363,41 @@
     else {
       var who = Math.abs(b - d) < 0.01 ? 'The burden is split <b>equally</b>' : 'The burden falls mostly on <b>' + (b > d ? 'buyers</b> (steeper demand, fewer substitutes)' : 'sellers</b> (steeper supply, fewer alternatives)');
       if (isTax) {
-        msg = 'The tax of $' + f1(v) + ' per unit cuts quantity by ' + f1(r.Qe - r.Q) + '. Buyers <b>substitute</b> away from the pricier good. ' + who + ': buyers bear ' + bShare + '%, sellers ' + (100 - bShare) + '%. ' +
+        msg = 'The <b>new equilibrium (market) price</b> is ' + money(r.Pc, 1) + ' (E* was ' + money(r.Pe, 1) + ') at quantity ' + f1(r.Q) + '. The tax of $' + f1(v) + ' per unit cuts quantity by ' + f1(r.Qe - r.Q) + '. Buyers <b>substitute</b> away from the pricier good. ' + who + ': buyers bear ' + bShare + '%, sellers ' + (100 - bShare) + '%. ' +
           'Government collects <b>' + money(r.G) + '</b>; the trades that vanish are the <b>deadweight loss</b> (' + money(r.DWL) + ').';
       } else {
-        msg = 'The subsidy of $' + f1(v) + ' per unit raises quantity by ' + f1(r.Q - r.Qe) + '. Buyers get ' + bShare + '% of the benefit and sellers ' + (100 - bShare) + '% (the side with the <b>steeper</b> curve gains more). Taxpayers pay <b>' + money(-r.G) + '</b>, more than the gain to buyers and sellers: the extra units cost more to produce than buyers value them — <b>deadweight loss</b> ' + money(r.DWL) + '.';
+        msg = 'The <b>new equilibrium (market) price</b> is ' + money(r.Pc, 1) + ' (E* was ' + money(r.Pe, 1) + ') at quantity ' + f1(r.Q) + '. The subsidy of $' + f1(v) + ' per unit raises quantity by ' + f1(r.Q - r.Qe) + '. Buyers get ' + bShare + '% of the benefit and sellers ' + (100 - bShare) + '% (the side with the <b>steeper</b> curve gains more). Taxpayers pay <b>' + money(-r.G) + '</b>, more than the gain to buyers and sellers: the extra units cost more to produce than buyers value them — <b>deadweight loss</b> ' + money(r.DWL) + '.';
       }
       kind = r.DWL > 0.5 ? 'warn' : '';
     }
     TR.message('#msg-t', msg, kind);
+    renderPriceBreak(r, isTax, v);
     renderSplit(r, 'split-t');
   };
+  /* Price breakdown: what the buyer pays vs what the seller receives, compared with the original price. */
+  function renderPriceBreak(r, isTax, v) {
+    var host = document.getElementById('price-t');
+    if (!PB || v < 0.05 || !(r.Q > 0)) { host.innerHTML = ''; return; }
+    var mx = Math.max(r.Pc, r.Ps, r.Pe), w = function (x) { return (100 * x / mx).toFixed(2) + '%'; };
+    var mark = '<span class="pbar-mark" style="left:' + w(r.Pe) + '" title="original price"></span>';
+    var seg = function (cls, val, tip) { return '<i class="' + cls + '" style="width:' + w(val) + '" title="' + tip + '"></i>'; };
+    var consBar = isTax ? seg('ps', r.Ps, 'kept by the seller') + seg('gov', v, 'tax to government') : seg('cs', r.Pc, 'paid by the buyer');
+    var prodBar = isTax ? seg('ps', r.Ps, 'kept by the seller') : seg('cs', r.Pc, 'paid by the buyer') + seg('gov', v, 'subsidy from taxpayers');
+    var dl = function (val) { var d = val - r.Pe; return (d >= 0 ? '+' : '−') + money(Math.abs(d), 1) + ' vs original'; };
+    var html = '<p class="ctl-title" style="margin:0 0 8px">Price breakdown</p>' +
+      '<div class="pbar-row"><span>Consumer pays</span><div class="pbar-wrap"><div class="pbar">' + consBar + '</div>' + mark + '</div><b>' + money(r.Pc, 1) + '</b></div>' +
+      '<div class="pbar-row"><span>Producer receives</span><div class="pbar-wrap"><div class="pbar">' + prodBar + '</div>' + mark + '</div><b>' + money(r.Ps, 1) + '</b></div>' +
+      '<ul class="split-list" style="grid-template-columns:1fr">' +
+      '<li><i class="sw box ink"></i>Original equilibrium price E* <b>' + money(r.Pe, 1) + '</b></li>' +
+      '<li><i class="sw box ink"></i>New equilibrium (market) price <b>' + money(r.Pc, 1) + '</b></li>' +
+      '<li><i class="sw box demand"></i>Buyers: <b>' + dl(r.Pc) + '</b></li>' +
+      '<li><i class="sw box supply"></i>Sellers: <b>' + dl(r.Ps) + '</b></li>' +
+      '<li><i class="sw box gold"></i>' + (isTax ? 'Tax wedge (consumer price − producer price)' : 'Subsidy (producer price − consumer price)') + ' <b>' + money(v, 1) + '</b></li></ul>' +
+      '<p class="hint">' + (isTax
+        ? 'The buyer pays the producer’s price <b>plus</b> the tax. The dashed line marks the original price ' + money(r.Pe, 1) + '.'
+        : 'The seller receives the buyer’s price <b>plus</b> the subsidy, which taxpayers cover. The dashed line marks the original price ' + money(r.Pe, 1) + '.') + '</p>';
+    host.innerHTML = html;
+  }
   cT.onDragStart = function () { snapT = { a: T.a, c: T.c }; };
   cT.onDrag = function (id, x, y, s) {
     var m = tCurves(), dx = x - s.x, dy = y - s.y;
@@ -363,6 +411,8 @@
   var subFmt = function (v) { return v <= 1.5 ? 'few' : v >= 4 ? 'many' : 'some'; };
   var sKb = TR.slider(ctlT, { label: 'Buyers’ substitutes', min: 1, max: 5, step: 0.5, value: T.kb, fmt: subFmt, hint: 'Many substitutes → flat demand: buyers switch away easily (elastic).', onInput: function (v) { T.kb = v; cT.draw(); } });
   var sKd = TR.slider(ctlT, { label: 'Sellers’ alternatives', min: 1, max: 5, step: 0.5, value: T.kd, fmt: subFmt, hint: 'Many alternatives (other products to make) → flat supply (elastic).', onInput: function (v) { T.kd = v; cT.draw(); } });
+  ctlT.insertAdjacentHTML('beforeend', '<p class="ctl-title">Chart option</p>');
+  var segPB = TR.seg(ctlT, [['on', 'Show buyer & seller price'], ['off', 'Hide']], 'on', function (v) { PB = v === 'on'; cT.draw(); });
   TR.button('#btn-t', 'Reset', function () { T = { a: 90, kb: 2.5, c: 10, kd: 2.5, t: 20 }; sTax.set(20); sKb.set(2.5); sKd.set(2.5); cT.draw(); });
   cT.draw();
 

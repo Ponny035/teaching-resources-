@@ -307,3 +307,21 @@ footer.site { border-top: 1px solid var(--border); padding-block: 22px; color: v
 .split-list li { display: flex; align-items: center; gap: 6px; }
 .split-list b { margin-left: auto; font-variant-numeric: tabular-nums; }
 .split-list .sw.box { opacity: 1; flex: none; }
+
+/* ---------- short-run vs long-run comparison table ---------- */
+table.tbl.cmp { min-width: 0; }
+table.tbl.cmp th:not(:first-child), table.tbl.cmp td:not(:first-child) { text-align: right; font-variant-numeric: tabular-nums; }
+table.tbl.cmp td:not(:first-child) { font-weight: 700; }
+table.tbl.cmp td.pos { color: var(--good-text); }
+table.tbl.cmp td.neg { color: var(--bad-text); }
+
+/* ---------- price breakdown bars ---------- */
+.pbar-row { display: grid; grid-template-columns: 112px minmax(0, 1fr) 62px; gap: 8px; align-items: center; font-size: .85rem; margin-bottom: 8px; }
+.pbar-row b { text-align: right; font-variant-numeric: tabular-nums; }
+.pbar-wrap { position: relative; }
+.pbar { display: flex; height: 20px; border-radius: 5px; overflow: hidden; background: var(--surface2); }
+.pbar i { display: block; height: 100%; border-right: 2px solid var(--surface); }
+.pbar i.ps { background: var(--supply); } .pbar i.cs { background: var(--demand); } .pbar i.gov { background: var(--gold); }
+.pbar-mark { position: absolute; top: -3px; bottom: -3px; border-left: 2px dashed var(--ink); }
+
+.sw.box.ink { background: var(--ink); }
